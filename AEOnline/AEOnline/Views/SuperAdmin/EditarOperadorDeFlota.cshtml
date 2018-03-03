@@ -1,0 +1,72 @@
+﻿@model AEOnline.Models.WebModels.CreacionOperador
+@{
+    ViewBag.Title = "EditarOperadorDeFlota";
+
+    Layout = "~/Views/Shared/_LayoutSuperAdmin.cshtml";
+
+    string rol = "";
+
+    if (Session["Rol"] != null)
+    {
+        rol += Session["Rol"].ToString();
+    }
+
+    if (rol != "SuperAdmin")
+    {
+        Response.Redirect("~/Login/Index");
+    }
+}
+
+<h2>Editar Operador de la flota</h2>
+
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+
+    <div class="form-horizontal">
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+        @Html.HiddenFor(model => model.Id)
+        @Html.HiddenFor(model => model.FlotaId)
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.Nombre, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.Nombre, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.Nombre, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group" id="cmbAuto">
+            <label class="control-label col-md-2">Usuario asignado</label>
+            <div class="col-md-10">
+                @Html.DropDownList("UsuarioId", null, htmlAttributes: new { @class = "form-control", @id = "cmbUsuario" })
+            </div>
+        </div>
+
+
+        <div class="form-group" id="cmbAuto">
+            <label class="control-label col-md-2">Auto asignado</label>
+            <div class="col-md-10">
+                @Html.DropDownList("AutoId", null, htmlAttributes: new { @class = "form-control", @id = "cmbAuto" })
+            </div>
+        </div>
+
+
+        <div class="form-group">
+            <div class="col-md-offset-2 col-md-10">
+                <input type="submit" value="Guardar" class="btn btn-default" />
+            </div>
+        </div>
+
+    </div>
+}
+
+<div>
+    @Html.ActionLink("Volver lista de operadores", "OperadoresFlota", new { id = (int)ViewBag.FlotaId })
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+
+}

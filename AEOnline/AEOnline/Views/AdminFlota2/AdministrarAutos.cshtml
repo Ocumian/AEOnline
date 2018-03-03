@@ -1,0 +1,221 @@
+﻿@model IEnumerable<AEOnline.Models.Auto>
+@{
+    ViewBag.Title = "AdministrarAutos";
+
+    Layout = "~/Views/Shared/_LayoutAdminFlota2.cshtml";
+
+    string rol = "";
+
+    if (Session["Rol"] != null)
+    {
+        rol += Session["Rol"].ToString();
+    }
+
+    if (rol != "AdminDeFlota")
+    {
+        Response.Redirect("~/Login/Index");
+    }
+}
+
+<div class="container m-lg-1">
+    <div class="btn-group m-lg-1">
+        <a href="@Url.Action("CrearAuto","AdminFlota2")" class="btn btn-primary">
+            <i class="fa fa-fw fa-plus"></i>
+            Registrar nuevo auto
+        </a>
+    </div>
+    <div class="btn-group float-right m-lg-1">
+        <a href="@Url.Action("HistorialesCombustible","AdminFlota2")" class="btn btn-primary">
+            <i class="fa fa-fw fa-tint"></i>
+            Cargas de combustible
+        </a>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <h1>@TempData["msg"]</h1>
+        <i class="fa fa-table"></i><strong><font size="5"> Vehículos</font></strong>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>
+         
+                            @Html.DisplayNameFor(model => model.NombreVehiculo)
+                        </th>
+                        <th>
+                            @Html.DisplayNameFor(model => model.Patente)
+                        </th>
+                        <th>
+                            Tipo de vehículo
+                        </th>
+                        <th>
+                            Datos extra
+                        </th>
+                        <th>
+                            Operador
+                        </th>
+                        <th>
+                            Kilometraje actual
+                        </th>
+                        <th>
+                            Registros móviles
+                        </th>
+                        <th>
+                            <p>Acciones</p>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                <div class="btn-group m-lg-1">
+                                    <a href="@Url.Action("FichaAuto", "AdminFlota2", new { id = item.Id , menu = 0})" class="btn btn-success">
+                                        <i class="fa fa-fw fa-car"></i>
+                                        @Html.DisplayFor(modelItem => item.NombreVehiculo)
+                                    </a>
+                                </div>
+                            </td>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.Patente)
+                            </td>
+                            <td>
+                                @{
+                                    string tipo = "-";
+                                    if (item.TipoVehiculo != null)
+                                    {
+                                        tipo = item.TipoVehiculo.Tipo;
+                                    }
+                                }
+                                @tipo
+                            </td>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.Marca)<br />
+                                @Html.DisplayFor(modelItem => item.Modelo)<br />
+                                @Html.DisplayFor(modelItem => item.Year)
+                            </td>
+                            <td>
+                                @{
+                                    string nOperador = "-";
+
+                                    if (item.OperadorId != null)
+                                    {
+                                        nOperador = item.Operador.Nombre;
+                                    }
+                                }
+                                @nOperador
+                            </td>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.KilometrajeActual)
+                            </td>
+                            <td>
+                                <div class="btn-group m-lg-1">
+                                    <a href="@Url.Action("RegistrosCelular", "AdminFlota2", new { id = item.Id , tipo = 1})" class="btn btn-info">
+                                        <i class="fa fa-fw fa-bar-chart"></i>
+                                        Registros
+                                    </a>
+                                </div>
+                            </td>
+                            <td align="center">
+                                <ul class="navbar-nav ml-lg-1">
+                                    <li  class="nav-item dropdown">
+                                        <a class="dropdown-toggle mr-lg-2" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            <i class="fa fa-fw fa-cog"></i>
+                                        </a>
+                                        <div class="dropdown-menu" aria-labelledby="messagesDropdown">
+                                            <a class="dropdown-item" href="@Url.Action("CargarCombustible", "AdminFlota2", new { id = item.Id })">
+                                                <div class="dropdown-message small"><i class="fa fa-fw fa-tint"></i>Cargar combustible</div>
+                                            </a>
+                                            <a class="dropdown-item" href="@Url.Action("EditarAuto","AdminFlota2", new { id = item.Id})">
+                                                <div class="dropdown-message small"><i class="fa fa-fw fa-edit"></i> Editar</div>
+                                            </a>
+                                            <a class="dropdown-item" href="#" data-toggle="modal" data-target="#borrarModal" 
+                                               data-id="@item.Id" data-name="@item.NombreVehiculo">
+                                                <div class="dropdown-message small"><i class="fa fa-fw fa-trash-o"></i>Eliminar</div>
+                                            </a>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+	
+@using (Html.BeginForm(null, null, FormMethod.Post, new { id = "__AjaxAntiForgeryForm" }))
+{
+    @Html.AntiForgeryToken()
+}
+
+<!-- Delete Modal-->
+<div class="modal fade" id="borrarModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">TITULO</h5>
+                <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body">Se borrará el vehículo y todos sus historiales asociados. No habrá forma de recuperar la información después de presionar en "Aceptar".</div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancelar</button>
+                <a class="btn btn-primary btn-ok" href="#" data-dismiss="modal">Aceptar</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts{
+<script>
+
+
+    //e  es el elemnto que hace aparecer el modal
+    //la informacion se le agrega en data-id y hay oportunidad de agregar mas como data-name, etc
+    //esa informacion se le asigna al btn ok del modal
+    $('#borrarModal').on('show.bs.modal', function (e) {
+        var data = $(e.relatedTarget).data();
+        $('.modal-title', this).text("¿Está seguro que desea borrar el vehículo '"+data.name+"'?");
+        $('.btn-ok', this).data('recordId', data.id);
+    });
+
+
+    //El boton modal cuando es clickeado lee la informacion que se le fue asignada anteriormente
+    //luego forma la url correcta y envia en modo post
+    $('#borrarModal').on('click', '.btn-ok', function (e) {
+        var $modalDiv = $(e.delegateTarget);
+        var $id = $(this).data('recordId');
+        var form = $('#__AjaxAntiForgeryForm');
+        var token = $('input[name="__RequestVerificationToken"]', form).val();
+
+        $.ajax({
+            type: "POST",
+            url: "/AdminFlota2/EliminarAuto",
+            data: {
+                __RequestVerificationToken: token,
+                id: $id
+            },
+            success: function (result) {
+                location.reload(true);
+            },
+            error: function (response) {
+                //debugger;
+                alert('eror');
+            }
+        });
+    });
+
+
+
+</script>
+}

@@ -1,0 +1,106 @@
+﻿@model IEnumerable <AEOnline.Models.Auto>
+@{
+    ViewBag.Title = "AutosFlota";
+
+    Layout = "~/Views/Shared/_LayoutSuperAdmin.cshtml";
+
+    string rol = "";
+
+    if (Session["Rol"] != null)
+    {
+        rol += Session["Rol"].ToString();
+    }
+
+    if (rol != "SuperAdmin")
+    {
+        Response.Redirect("~/Login/Index");
+    }
+}
+
+<h2>Autos de la flota "@ViewBag.NombreFlota"</h2>
+
+<p>
+    @Html.ActionLink("Crear auto a esta flota", "CrearAutoEnFlota", new { id = (int)ViewBag.FlotaId })
+</p>
+
+<table class="table">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.NombreVehiculo)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Patente)
+        </th>
+        <th>
+            Tipo de vehículo
+        </th>
+        <th>
+            Datos extra
+        </th>
+        <th>
+            Operador
+        </th>
+        <th>
+            Kilometraje
+        </th>
+        <th>
+            Acciones
+        </th>
+
+    </tr>
+
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>
+               @Html.DisplayFor(modelItem => item.NombreVehiculo)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Patente)
+            </td>
+            <td>
+                @{
+                    string tipo = "-";
+                    if (item.TipoVehiculo != null)
+                    {
+                        tipo = item.TipoVehiculo.Tipo;
+                    }
+                }
+                @tipo
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Modelo)<br />
+                @Html.DisplayFor(modelItem => item.Marca)<br />
+                @Html.DisplayFor(modelItem => item.Year)
+            </td>
+
+            <td>
+                @{
+                    string nOperador = "-";
+
+                    if (item.OperadorId != null)
+                    {
+                        nOperador = item.Operador.Nombre;
+                    }
+                }
+                @nOperador
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.KilometrajeActual)
+            </td>
+            <td>
+                @*@Html.ActionLink("Registros Celular", "RegistrosCelular", new { id = item.Id, tipo = 1 })<br />*@
+                @*@Html.ActionLink("Cargar combustible", "CargarCombustible", new { id = item.Id })<br />*@
+                @Html.ActionLink("Editar", "EditarAutoDeFlota", new { id = item.Id, idFlota = (int)ViewBag.FlotaId })<br />
+                @Html.ActionLink("Eliminar", "EliminarAutoDeFlota", new { id = item.Id, idFlota = (int)ViewBag.FlotaId })
+            </td>
+            <td></td>
+
+        </tr>
+     }
+
+</table>
+
+<div>
+    @Html.ActionLink("Volver a administrar flotas", "AdminFlotas")
+</div>

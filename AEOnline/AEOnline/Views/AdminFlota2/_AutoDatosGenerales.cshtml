@@ -1,0 +1,162 @@
+﻿@model AEOnline.Models.Auto
+
+
+<div class="container">
+    <div class="card card-register mx-auto ">
+        <div class="card-header">Datos generales</div>
+        <div class="card-body">
+
+            <div class="form-group">
+                <div class="form-row">
+                    <div class="col-md-6">
+                        <dl class="dl-horizontal">
+                            <dt>
+                                @Html.DisplayNameFor(model => model.NombreVehiculo)
+                            </dt>
+
+                            <dd>
+                                @Html.DisplayFor(model => model.NombreVehiculo)
+                            </dd>
+
+                            <dt>
+                                @Html.DisplayNameFor(model => model.Modelo)
+                            </dt>
+
+                            <dd>
+                                @Html.DisplayFor(model => model.Modelo)
+                            </dd>
+
+                            <dt>
+                                @Html.DisplayNameFor(model => model.Marca)
+                            </dt>
+
+                            <dd>
+                                @Html.DisplayFor(model => model.Marca)
+                            </dd>
+
+                            <dt>
+                                Año
+                            </dt>
+
+                            <dd>
+                                @Html.DisplayFor(model => model.Year)
+                            </dd>
+
+                        </dl>
+                    </div>
+                    <div class="col-md-6">
+                        <dl class="dl-horizontal">
+
+                            <dt>
+                                @Html.DisplayNameFor(model => model.Patente)
+                            </dt>
+
+                            <dd>
+                                @Html.DisplayFor(model => model.Patente)
+                            </dd>
+
+                            <dt>
+                                Tipo de vehículo
+                            </dt>
+
+                            <dd>
+                                @{
+                                    string tipo = "-";
+
+                                    if (Model.TipoVehiculo != null)
+                                    {
+                                        tipo = Model.TipoVehiculo.Tipo;
+                                    }
+                                }
+                                @tipo
+                            </dd> 
+
+                            <dt>
+                                Operador
+                            </dt>
+
+                            <dd>
+                                @{
+                                    string nombre = "-";
+                                    if (Model.OperadorId != null)
+                                    {
+                                        nombre = Model.Operador.Nombre;
+                                    }
+                                }
+                                @nombre
+                            </dd>
+
+                            <dt>
+                                Kilometraje actual
+                            </dt>
+
+                            <dd>
+                                @Html.DisplayFor(model => model.KilometrajeActual) Kms
+                            </dd>
+
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="card-header">Registros</div>
+        <div class="card-body">
+
+            <div class="form-group">
+                <div class="form-row">
+
+
+                    <div class="col-md-6">
+
+                        <dl class="dl-horizontal">
+                            <dt>
+                                Rendimiento promedio
+                            </dt>
+
+                            <dd>
+                                @Html.DisplayFor(model => model.RendimientoPromedio) Km/L
+                            </dd>
+
+                            <dt>
+                                Costo por Km
+                            </dt>
+
+                            <dd>
+                                $@Html.DisplayFor(model => model.CostoKilometroPromedio)
+                            </dd>
+
+                            <dt>
+                                Costo por litro
+                            </dt>
+
+                            <dd>
+                                $@Html.DisplayFor(model => model.CostoLitroPromedio)
+                            </dd>
+                        </dl>
+                    </div>
+                    <div class="col-md-6">
+                        <dl class="dl-horizontal">
+                            <dt>
+                                CostoTotal combustible
+                            </dt>
+
+                            <dd>
+                                $@Html.DisplayFor(model => model.CostoTotalCombustible)
+                            </dd>
+
+                            <dt>
+                                CostoTotal mantención
+                            </dt>
+
+                            <dd>
+                                $@Html.DisplayFor(model => model.CostoTotalMantenimiento)
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

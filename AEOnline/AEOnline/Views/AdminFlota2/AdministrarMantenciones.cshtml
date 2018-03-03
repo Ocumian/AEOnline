@@ -1,0 +1,208 @@
+﻿@model IEnumerable<AEOnline.Models.HistorialMantencion>
+@{
+    ViewBag.Title = "AdministrarMantenciones";
+
+    Layout = "~/Views/Shared/_LayoutAdminFlota2.cshtml";
+
+    string rol = "";
+
+    if (Session["Rol"] != null)
+    {
+        rol += Session["Rol"].ToString();
+    }
+
+    if (rol != "AdminDeFlota")
+    {
+        Response.Redirect("~/Login/Index");
+    }
+}
+
+<div class="container m-lg-1">
+    <div class="btn-group m-lg-1">
+        <a href="@Url.Action("AplicarMantenimiento","AdminFlota2")" class="btn btn-primary">
+            <i class="fa fa-fw fa-wrench"></i>
+            Aplicar mantención
+        </a>
+    </div>
+    <div class="btn-group float-right m-lg-1">
+        <a href="@Url.Action("CatalogoServicios","AdminFlota2")" class="btn btn-primary">
+            <i class="fa fa-fw fa-gears"></i>
+            Catálogo de servicios
+        </a>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <i class="fa fa-table"></i> <strong><font size="5"> Mantenciones de vehículos</font></strong>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>
+                            Fecha
+                        </th>
+                        <th>
+                            Vehículo
+                        </th>
+                        <th>
+                            Kilometraje
+                        </th>
+
+                        <th>
+                            Tipo Mantenimiento
+                        </th>
+                        <th>
+                            Proveedor
+                        </th>
+                        <th>
+                            Servicios aplicados
+                        </th>
+                        <th>
+                            Costo
+                        </th>
+                        <th>
+                            Acciones
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.Fecha)
+                            </td>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.Auto.NombreVehiculo)
+                            </td>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.Kilometraje) Kms
+                            </td>
+
+                            <td>
+                                @Html.DisplayFor(modelItem => item.TipoDeMantenimiento)
+                            </td>
+
+                            <td>
+                                @{
+                                    string nProveedor = "-";
+
+                                    if (item.Proveedor != null)
+                                    {
+                                        nProveedor = item.Proveedor.NombreComercial;
+                                    }
+                                }
+                                @nProveedor
+                            </td>
+                            <td>
+                                @{
+                                    foreach (var ManSer in item.ServiciosAplicados)
+                                    {
+                                        <text>
+                                            @ManSer.Servicio.NombreServicio <br />
+                                        </text>
+                                    }
+                                }
+                            </td>
+                            <td>
+                                $@Html.DisplayFor(modelItem => item.Costo)
+                            </td>
+                            <td align="center">
+                                <ul class="navbar-nav ml-lg-1">
+                                    <li class="nav-item dropdown">
+                                        <a class="dropdown-toggle mr-lg-2" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            <i class="fa fa-fw fa-cog"></i>
+                                        </a>
+                                        <div class="dropdown-menu" aria-labelledby="messagesDropdown">
+                                            <a class="dropdown-item" href="@Url.Action("EditarMantencion","AdminFlota2", new { id = item.Id, autoId = item.Auto.Id})">
+                                                <div class="dropdown-message small"><i class="fa fa-fw fa-edit"></i> Editar</div>
+                                            </a>
+                                            <a class="dropdown-item" href="#" data-toggle="modal" data-target="#borrarModal"
+                                               data-id="@item.Id" data-name="@item.Fecha" data-autoid="@item.Auto.Id">
+                                                <div class="dropdown-message small"><i class="fa fa-fw fa-trash-o"></i>Eliminar</div>
+                                            </a>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </td>
+                        </tr>
+                     }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@using (Html.BeginForm(null, null, FormMethod.Post, new { id = "__AjaxAntiForgeryForm" }))
+{
+    @Html.AntiForgeryToken()
+}
+
+<!-- Delete Modal-->
+<div class="modal fade" id="borrarModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">TITULO</h5>
+                <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body">Se eliminará el resgistro de esta fecha. ¿Está seguro de hacerlo?</div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancelar</button>
+                <a class="btn btn-primary btn-ok" href="#" data-dismiss="modal">Aceptar</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts{
+    <script>
+
+
+    //e  es el elemnto que hace aparecer el modal
+    //la informacion se le agrega en data-id y hay oportunidad de agregar mas como data-name, etc
+    //esa informacion se le asigna al btn ok del modal
+    $('#borrarModal').on('show.bs.modal', function (e) {
+        var data = $(e.relatedTarget).data();
+        $('.modal-title', this).text("¿Está seguro que desea borrar el registro de la fecha '"+data.name+"'?");
+        $('.btn-ok', this).data('recordId', data.id);
+        $('.btn-ok', this).data('autoId', data.autoid);
+    });
+
+
+    //El boton modal cuando es clickeado lee la informacion que se le fue asignada anteriormente
+    //luego forma la url correcta y envia en modo post
+    $('#borrarModal').on('click', '.btn-ok', function (e) {
+        var $modalDiv = $(e.delegateTarget);
+        var $id = $(this).data('recordId');
+        var $autoid = $(this).data('autoId');
+        var form = $('#__AjaxAntiForgeryForm');
+        var token = $('input[name="__RequestVerificationToken"]', form).val();
+
+        $.ajax({
+            type: "POST",
+            url: "/AdminFlota2/EliminarMantencion",
+            data: {
+                __RequestVerificationToken: token,
+                id: $id,
+                autoid: $autoid
+            },
+            success: function (result) {
+                location.reload(true);
+            },
+            error: function (response) {
+                //debugger;
+                alert('eror');
+            }
+        });
+    });
+
+
+
+    </script>
+}

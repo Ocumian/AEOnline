@@ -1,0 +1,266 @@
+﻿@model AEOnline.Models.WebModels.HistorialWeb
+<script src="~/Scripts/Extra/echarts.js"></script>
+
+<style>
+    /* Always set the map height explicitly to define the size of the div
+      * element that contains the map. */
+    #container {
+        height: 500px;
+        width: 1000px;
+    }
+</style>
+
+<h1>Historial de energía</h1>
+<br />
+
+<table class="table">
+    <tr>
+        <th>
+            @Html.DropDownListFor(model => model.historialesComparables, new SelectList(Model.historialesComparables), "Comparar con otro historial", new { @class = "form-control", @onchange = "CompararHistorial(this.value)" })
+        </th>
+        <th>
+        </th>
+    </tr>
+</table>
+
+
+
+<div id="container"></div>
+<br />
+<div>
+    <h3>
+        @*Datos extra*@
+    </h3>
+</div>
+
+
+<script type="text/javascript">
+
+
+    var dom = document.getElementById("container");
+    var myChart = echarts.init(dom);
+    var option = null;
+
+    var data = [];
+
+    GraficoEnergia();
+
+    if (option && typeof option === "object") {
+        myChart.setOption(option, true);
+    }
+
+
+    function CompararHistorial(val)
+    {
+
+        if (val == "") {
+            GraficoEnergia();
+        }
+        else if (val == "Velocidad") {
+            GraficoVelocidadEnergia();
+        }
+
+        if (option && typeof option === "object") {
+            myChart.setOption(option, true);
+        }
+    }
+
+    function GraficoEnergia()
+    {
+        option = {
+            title: {
+                text: 'Historial Energía',
+                subtext: ''
+            },
+            tooltip: {
+                trigger: 'axis',
+
+                formatter: function (params) {
+                    //POR AXIS: params[0].value[1]
+                    //POR ITEM: params.value[1]
+
+                    var date = new Date(params[0].value[0]);
+                    var energia = params[0].value[1];
+
+                    data = date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds();
+                    return data + '<br/>'
+                        + energia + " kWh";
+                }
+            },
+            toolbox: {
+                //show: true,
+                //feature: {
+                //    mark: { show: true },
+                //    dataView: { show: true, readOnly: false },
+                //    restore: { show: true },
+                //    saveAsImage: { show: true }
+                //}
+            },
+            dataZoom: {
+                show: true,
+                start: 0
+            },
+            legend: {
+                data: ['Energia']
+            },
+            grid: {
+                y2: 80
+            },
+            xAxis: [
+                {
+                    name: 'Hora registro',
+                    type: 'time',
+                    splitNumber: 10
+                }
+            ],
+            yAxis: [
+                {
+                    name: 'Energía en kilovatio-hora (kWh)',
+                    type: 'value'
+                }
+            ],
+            series: [
+                {
+                    name: 'Energia',
+                    type: 'line',
+                    itemStyle: { normal: { areaStyle: { type: 'default' } } },
+                    showAllSymbol: true,
+                    symbolSize: 10,
+                    data: ObtenerDatosEnergia()
+                }
+            ]
+        };
+    }
+
+    function GraficoVelocidadEnergia()
+    {
+        option = {
+            title: {
+                text: 'Historial Energía vs Historial Velocidad',
+                subtext: ''
+            },
+            tooltip: {
+                trigger: 'axis',
+                formatter: function (params) {
+                    //POR AXIS: params[0].value[1]
+                    //POR ITEM: params.value[1]
+
+                    var date = new Date(params[0].value[0]);
+                    var velocidad = params[0].value[1];
+                    var energia = params[1].value[1];
+
+                    data = date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds();
+                    return data + '<br/>'
+                        + "<strong>Energía:</strong> " + energia + " kWh<br/>"
+                        + "<strong>Velocidad</strong> " + velocidad + " Km/Hr";
+
+                }
+            },
+            toolbox: {
+                //show: true,
+                //feature: {
+                //    mark: { show: true },
+                //    dataView: { show: true, readOnly: false },
+                //    restore: { show: true },
+                //    saveAsImage: { show: true }
+                //}
+            },
+            dataZoom: {
+                show: true,
+                start: 0
+            },
+            legend: {
+                data: ['Velocidad', 'Energía']
+            },
+            grid: {
+                y2: 80
+            },
+            xAxis: [
+                {
+                    name: 'Hora registro',
+                    type: 'time',
+                    splitNumber: 10
+                }
+            ],
+            yAxis: [
+                {
+                    name: 'Energía en Kilovatios-hora (kWh)',
+                    type: 'value'
+                }
+                ,
+                {
+                    name: 'Velocidad en (Km/h)',
+                    type: 'value'
+                }
+            ],
+            series: [
+                {
+                    name: 'Velocidad',
+                    type: 'line',
+                    itemStyle: { normal: { areaStyle: { type: 'default' } } },
+                    yAxisIndex: 1,
+                    showAllSymbol: true,
+                    symbolSize: 10,
+                    data: ObtenerDatosVelocidad()
+                },
+                {
+                    name: 'Energía',
+                    type: 'line',
+                    itemStyle: { normal: { areaStyle: { type: 'default' } } },
+                    showAllSymbol: true,
+                    symbolSize: 10,
+                    data: ObtenerDatosEnergia()
+                }
+            ]
+        };
+    }
+
+
+
+
+    function ObtenerDatosVelocidad()
+    {
+        var d = [];
+
+        @{
+            for (int i = 0; i < Model.historialesVelocidad.Count; i++)
+            {
+            <text>
+            d.push([
+                new Date(@Model.historialesVelocidad[i].FechaHora.Year, @Model.historialesVelocidad[i].FechaHora.Month, @Model.historialesVelocidad[i].FechaHora.Day, @Model.historialesVelocidad[i].FechaHora.Hour, @Model.historialesVelocidad[i].FechaHora.Minute, @Model.historialesVelocidad[i].FechaHora.Second )
+                ,
+                @Model.historialesVelocidad[i].Valor.ToString().Replace(',', '.')
+                ]);
+            </text>
+            }
+        }
+
+
+        return d;
+    }
+
+    function ObtenerDatosEnergia()
+    {
+        var d = [];
+
+        @{
+            for (int i = 0; i < Model.historialesEnergia.Count; i++)
+            {
+            <text>
+            d.push([
+                new Date(@Model.historialesEnergia[i].FechaHora.Year, @Model.historialesEnergia[i].FechaHora.Month, @Model.historialesEnergia[i].FechaHora.Day, @Model.historialesEnergia[i].FechaHora.Hour, @Model.historialesEnergia[i].FechaHora.Minute, @Model.historialesEnergia[i].FechaHora.Second )
+                ,
+                @Model.historialesEnergia[i].Valor.ToString().Replace(',', '.')
+                ]);
+            </text>
+            }
+        }
+
+
+        return d;
+    }
+
+
+
+
+</script>

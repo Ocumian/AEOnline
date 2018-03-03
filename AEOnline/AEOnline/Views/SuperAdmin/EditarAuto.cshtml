@@ -1,0 +1,110 @@
+﻿@model AEOnline.Models.WebModels.CreacionAuto
+@{
+    ViewBag.Title = "EditarAuto";
+    Layout = "~/Views/Shared/_LayoutSuperAdmin.cshtml";
+
+    string rol = "";
+
+    if (Session["Rol"] != null)
+    {
+        rol += Session["Rol"].ToString();
+    }
+
+    if (rol != "SuperAdmin")
+    {
+        Response.Redirect("~/Login/Index");
+    }
+}
+
+<h2>Editar Auto</h2>
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+
+    <div class="form-horizontal">
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+        @Html.HiddenFor(model => model.Id)
+
+
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.NombreVehiculo, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.NombreVehiculo, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.NombreVehiculo, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.Patente, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.Patente, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.Patente, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.Marca, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.Marca, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.Marca, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.Modelo, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.Modelo, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.Modelo, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="control-label col-md-2">Año</label>
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.Year, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.Year, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="control-label col-md-2">Kilometraje actual</label>
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.KilometrajeActual, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.KilometrajeActual, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+
+
+        <div class="form-group" id="cmbAuto">
+            <label class="control-label col-md-2">Flota asignada</label>
+            <div class="col-md-10">
+                @Html.DropDownList("FlotaId", null, htmlAttributes: new { @class = "form-control" })
+            </div>
+        </div>
+
+
+        <div class="form-group">
+            <div class="col-md-offset-2 col-md-10">
+                <input type="submit" value="Guardar" class="btn btn-default" />
+            </div>
+        </div>
+
+
+
+    </div>
+}
+
+<div>
+    @Html.ActionLink("Volver a la lista", "AdminAutos")
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+  
+}
+
+
+
+

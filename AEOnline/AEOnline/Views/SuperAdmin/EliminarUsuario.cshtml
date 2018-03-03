@@ -1,0 +1,85 @@
+﻿@model AEOnline.Models.Usuario
+@{
+    ViewBag.Title = "EliminarUsuario";
+
+    Layout = "~/Views/Shared/_LayoutSuperAdmin.cshtml";
+
+    string rol = "";
+
+    if (Session["Rol"] != null)
+    {
+        rol += Session["Rol"].ToString();
+    }
+
+    if (rol != "SuperAdmin")
+    {
+        Response.Redirect("~/Login/Index");
+    }
+}
+
+<h2>Está seguro que desea eliminar el usuario @Model.Nombre ?</h2>
+
+<hr />
+<dl class="dl-horizontal">
+    <dt>
+        @Html.DisplayNameFor(model => model.Nombre)
+    </dt>
+
+    <dd>
+        @Html.DisplayFor(model => model.Nombre)
+    </dd>
+
+    <dt>
+        @Html.DisplayNameFor(model => model.Email)
+    </dt>
+
+    <dd>
+        @Html.DisplayFor(model => model.Email)
+    </dd>
+
+    <dt>
+        Administrador de flota
+    </dt>
+
+    <dd>
+        @{
+            string nFlota = "-";
+
+            if (Model.UsuarioFlotaId != null)
+            {
+                nFlota = Model.UsuarioFlota.Flota.Nombre;
+            }
+        }
+        @nFlota
+    </dd>
+
+    <dt>
+        Chofer de auto
+    </dt>
+
+    <dd>
+        @{
+            string nFlotaOp = "-";
+
+            if (Model.OperadorId != null)
+            {
+                nFlotaOp = Model.Operador.Auto.Patente;
+            }
+        }
+        @nFlotaOp
+    </dd>
+
+</dl>
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+
+    <div class="form-actions no-color">
+        <input type="submit" value="Confirmar Eliminación" class="btn btn-default" />
+    </div>
+
+        <div class="form-actions no-color">
+            @Html.ActionLink("Volver a lista de Usuarios", "AdminUsuarios")
+        </div>
+}

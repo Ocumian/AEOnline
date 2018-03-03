@@ -1,0 +1,193 @@
+﻿@model List<AEOnline.Models.HistorialCargaCombustible>
+
+
+<div class="card mb-3">
+    <div class="card-header">
+        <strong><font size="5"> Cargas de combustible de este auto</font></strong>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>
+                            Fecha de carga
+                        </th>
+                        <th>
+                            Datos compra
+                        </th>
+                        <th>
+                            Kilometraje
+                        </th>
+                        <th>
+                            Proveedor
+                        </th>
+                        <th>
+                            Kms Recorridos
+                        </th>
+                        <th>
+                            Costo por Km
+                        </th>
+                        <th>
+                            Rendimiento
+                        </th>
+                        <th>
+                            Acciones
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.FechaHora)
+                            </td>
+                            <td>
+                                ¿Estanque lleno?: @Html.DisplayFor(modelItem => item.EstanqueLleno)<br />
+                                Cantidad: @Html.DisplayFor(modelItem => item.CantidadLitros) Lts<br />
+                                Costo Unitario: $@Html.DisplayFor(modelItem => item.CostoUnitario) <br />
+                                <strong>Costo Total:</strong> $@Html.DisplayFor(modelItem => item.CostoTotal)
+                            </td>
+
+                            <td>
+                                @Html.DisplayFor(modelItem => item.Kilometraje) Kms
+                            </td>
+
+                            <td>
+                                @{
+                                    string nProveedor = "-";
+
+                                    if (item.Proveedor != null)
+                                    {
+                                        nProveedor = item.Proveedor.NombreComercial;
+                                    }
+                                }
+                                @nProveedor
+                            </td>
+                            <td>
+                                @{
+                                    string kilRecorridos = "-";
+                                    if (item.KilometrosRecorridos != -1)
+                                    {
+                                        kilRecorridos = item.KilometrosRecorridos + "Kms";
+                                    }
+                                }
+                                @kilRecorridos
+                            </td>
+                            <td>
+                                @{
+                                    string costoKM = "-";
+                                    if (item.CostoPorKilometro != -1)
+                                    {
+                                        costoKM = "$" + item.CostoPorKilometro;
+                                    }
+                                }
+                                @costoKM
+                            </td>
+                            <td>
+                                @{
+                                    string rendimiento = "-";
+                                    if (item.Rendimiento != -1)
+                                    {
+                                        rendimiento = item.Rendimiento + " Km/L";
+                                    }
+                                }
+                                @rendimiento
+                            </td>
+                            <td align="center">
+                                <ul class="navbar-nav ml-lg-1">
+                                    <li class="nav-item dropdown">
+                                        <a class="dropdown-toggle mr-lg-2" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            <i class="fa fa-fw fa-cog"></i>
+                                        </a>
+                                        <div class="dropdown-menu" aria-labelledby="messagesDropdown">
+                                            <a class="dropdown-item" href="@Url.Action("EditarCargaCombustible","AdminFlota2", new { id = item.Id, autoId = item.Auto.Id})">
+                                                <div class="dropdown-message small"><i class="fa fa-fw fa-edit"></i> Editar</div>
+                                            </a>
+                                            <a class="dropdown-item" href="#" data-toggle="modal" data-target="#borrarModal"
+                                               data-id="@item.Id" data-name="@item.FechaHora" data-autoid="@item.Auto.Id">
+                                                <div class="dropdown-message small"><i class="fa fa-fw fa-trash-o"></i>Eliminar</div>
+                                            </a>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@using (Html.BeginForm(null, null, FormMethod.Post, new { id = "__AjaxAntiForgeryForm" }))
+{
+    @Html.AntiForgeryToken()
+}
+
+<!-- Delete Modal-->
+<div class="modal fade" id="borrarModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">TITULO</h5>
+                <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body">Se eliminará el resgistro de esta fecha. ¿Está seguro de hacerlo?</div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancelar</button>
+                <a class="btn btn-primary btn-ok" href="#" data-dismiss="modal">Aceptar</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts{
+    <script>
+
+
+        //e  es el elemnto que hace aparecer el modal
+        //la informacion se le agrega en data-id y hay oportunidad de agregar mas como data-name, etc
+        //esa informacion se le asigna al btn ok del modal
+        $('#borrarModal').on('show.bs.modal', function (e) {
+            var data = $(e.relatedTarget).data();
+            $('.modal-title', this).text("¿Está seguro que desea borrar el registro de la fecha '" + data.name + "'?");
+            $('.btn-ok', this).data('recordId', data.id);
+            $('.btn-ok', this).data('autoId', data.autoid);
+        });
+
+
+        //El boton modal cuando es clickeado lee la informacion que se le fue asignada anteriormente
+        //luego forma la url correcta y envia en modo post
+        $('#borrarModal').on('click', '.btn-ok', function (e) {
+            var $modalDiv = $(e.delegateTarget);
+            var $id = $(this).data('recordId');
+            var $autoid = $(this).data('autoId');
+            var form = $('#__AjaxAntiForgeryForm');
+            var token = $('input[name="__RequestVerificationToken"]', form).val();
+
+            $.ajax({
+                type: "POST",
+                url: "/AdminFlota2/EliminarCargaCombustible",
+                data: {
+                    __RequestVerificationToken: token,
+                    id: $id,
+                    autoid: $autoid
+                },
+                success: function (result) {
+                    location.reload(true);
+                },
+                error: function (response) {
+                    //debugger;
+                    alert('eror');
+                }
+            });
+        });
+
+
+
+    </script>
+}

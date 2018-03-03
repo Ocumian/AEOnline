@@ -1,0 +1,222 @@
+﻿@model IEnumerable<AEOnline.Models.Servicio>
+@{
+    ViewBag.Title = "CatalogoServicios";
+
+    Layout = "~/Views/Shared/_LayoutAdminFlota2.cshtml";
+
+    string rol = "";
+
+    if (Session["Rol"] != null)
+    {
+        rol += Session["Rol"].ToString();
+    }
+
+    if (rol != "AdminDeFlota")
+    {
+        Response.Redirect("~/Login/Index");
+    }
+}
+
+<div class="container m-lg-1">
+    <div class="btn-group m-lg-1">
+        <a href="#" class="btn btn-primary"
+           data-toggle="modal" data-target="#crearModal" data-id="#" data-name="#">
+            <i class="fa fa-fw fa-plus"></i>
+            Crear nuevo tipo de servicio
+        </a>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <i class="fa fa-table"></i><strong><font size="5"> Catálogo de servicios</font></strong>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>
+
+                            @Html.DisplayNameFor(model => model.NombreServicio)
+                        </th>
+                        <th>
+                            Acciones
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.NombreServicio)
+                            </td>
+                            <td>
+                                <div class="btn-group m-lg-1">
+                                    <a href="#" class="btn btn-danger"
+                                       data-toggle="modal" data-target="#borrarModal" data-id="@item.Id" data-name="@item.NombreServicio">
+                                        <i class="fa fa-fw fa-trash-o"></i>
+                                        Eliminar
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@using (Html.BeginForm(null, null, FormMethod.Post, new { id = "__AjaxAntiForgeryForm" }))
+{
+    @Html.AntiForgeryToken()
+}
+
+<!-- Delete Modal-->
+<div class="modal fade" id="borrarModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">TITULO</h5>
+                <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body">Al apretar "Aceptar", el servicio borrado también desaparecerá de los historiales pertenecientes.</div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancelar</button>
+                <a class="btn btn-primary btn-ok" href="#" data-dismiss="modal">Aceptar</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CREATE MODAL -->
+<div class="modal fade" id="crearModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Crear nuevo tipo de servicio</h5>
+                <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body">
+
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-md-3">
+                            <p>Nuevo Servicio:</p>
+                        </div>
+                        <div>
+                            <input id="txtNuevoServicio" value="">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancelar</button>
+                <a class="btn btn-primary btn-ok" href="#" data-dismiss="modal">Crear</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ALERT MODAL -->
+<div class="modal fade" id="alertModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Alerta</h5>
+                <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body">MENSAJE</div>
+            <div class="modal-footer">
+                @*<button class="btn btn-secondary" type="button" data-dismiss="modal">Cancelar</button>*@
+                <a class="btn btn-primary btn-ok" href="#" data-dismiss="modal">Ok</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section scripts{
+    <script>
+
+
+    //e  es el elemnto que hace aparecer el modal
+    //la informacion se le agrega en data-id y hay oportunidad de agregar mas como data-name, etc
+    //esa informacion se le asigna al btn ok del modal
+    $('#borrarModal').on('show.bs.modal', function (e) {
+        var data = $(e.relatedTarget).data();
+        $('.modal-title', this).text("¿Está seguro de eliminar el servicio '"+data.name+"'?");
+        $('.btn-ok', this).data('recordId', data.id);
+    });
+
+
+    //El boton modal cuando es clickeado lee la informacion que se le fue asignada anteriormente
+    //luego forma la url correcta y envia en modo post
+    $('#borrarModal').on('click', '.btn-ok', function (e) {
+        var $id = $(this).data('recordId');
+        var form = $('#__AjaxAntiForgeryForm');
+        var token = $('input[name="__RequestVerificationToken"]', form).val();
+
+        $.ajax({
+            type: "POST",
+            url: "/AdminFlota2/EliminarServicio",
+            data: {
+                __RequestVerificationToken: token,
+                id: $id
+            },
+            success: function (result) {
+                location.reload(true);
+            },
+            error: function (response) {
+                //debugger;
+                alert('eror');
+            }
+        });
+        });
+
+        $('#crearModal').on('click', '.btn-ok', function (e) {
+            var $nuevoServicio = document.getElementById('txtNuevoServicio').value;
+            var form = $('#__AjaxAntiForgeryForm');
+            var token = $('input[name="__RequestVerificationToken"]', form).val();
+
+            $.ajax({
+                type: "POST",
+                url: "/AdminFlota2/CrearServicio",
+                data: {
+                    __RequestVerificationToken: token,
+                    model: {
+                        NombreServicio: $nuevoServicio
+                    }
+                },
+                success: function (result) {
+
+                    if (result.exito == true)
+                    {
+                        location.reload(true);
+                    }
+                    else
+                    {
+                        alert(result.mensaje);
+                    }
+
+                },
+                error: function (response) {
+                    //debugger;
+                    alert("error");
+                }
+            });
+        });
+
+
+
+    </script>
+}

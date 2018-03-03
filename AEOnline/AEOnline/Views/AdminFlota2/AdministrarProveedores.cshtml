@@ -1,0 +1,163 @@
+﻿@model IEnumerable < AEOnline.Models.Proveedor>
+@{
+    ViewBag.Title = "AdministrarProveedores";
+
+    Layout = "~/Views/Shared/_LayoutAdminFlota2.cshtml";
+
+    string rol = "";
+
+    if (Session["Rol"] != null)
+    {
+        rol += Session["Rol"].ToString();
+    }
+
+    if (rol != "AdminDeFlota")
+    {
+        Response.Redirect("~/Login/Index");
+    }
+}
+
+<div class="container m-lg-1">
+    <div class="btn-group m-lg-1">
+        <a href="@Url.Action("CrearProveedor","AdminFlota2")" class="btn btn-primary">
+            <i class="fa fa-fw fa-plus"></i>
+            Crear nuevo proveedor
+        </a>
+    </div>
+</div>
+<div class="card mb-3">
+    <div class="card-header">
+        <h1>@TempData["msg"]</h1>
+        <i class="fa fa-table"></i><strong><font size="5"> Proveedores</font></strong>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>
+                            Nombre comercial
+                        </th>
+                        <th>
+                            Teléfono
+                        </th>
+                        <th>
+                            Dirección
+                        </th>
+                        <th>
+                            Acciones
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                <div class="btn-group m-lg-1">
+                                    <a href="@Url.Action("FichaProveedor", "AdminFlota2", new { id = item.Id})" class="btn btn-success">
+                                        <i class="fa fa-fw fa-building"></i>
+                                        @Html.DisplayFor(modelItem => item.NombreComercial)
+                                    </a>
+                                </div>
+                            </td>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.Telefono)
+                            </td>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.Direccion)
+                            </td>
+                            <td align="center">
+                                <ul class="navbar-nav ml-lg-1">
+                                    <li class="nav-item dropdown">
+                                        <a class="dropdown-toggle mr-lg-2" href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            <i class="fa fa-fw fa-cog"></i>
+                                        </a>
+                                        <div class="dropdown-menu" aria-labelledby="messagesDropdown">
+                                            <a class="dropdown-item" href="@Url.Action("EditarProveedor","AdminFlota2", new { id = item.Id})">
+                                                <div class="dropdown-message small"><i class="fa fa-fw fa-edit"></i> Editar</div>
+                                            </a>
+                                            <a class="dropdown-item" href="#" data-toggle="modal" data-target="#borrarModal"
+                                               data-id="@item.Id" data-name="@item.NombreComercial">
+                                                <div class="dropdown-message small"><i class="fa fa-fw fa-trash-o"></i>Eliminar</div>
+                                            </a>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@using (Html.BeginForm(null, null, FormMethod.Post, new { id = "__AjaxAntiForgeryForm" }))
+{
+    @Html.AntiForgeryToken()
+}
+
+<!-- Delete Modal-->
+<div class="modal fade" id="borrarModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">TITULO</h5>
+                <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body">Al apretar "Aceptar" se eliminara el proveedor, sus registros y desaparecerá de los historiales en los que estaba incluido.</div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancelar</button>
+                <a class="btn btn-primary btn-ok" href="#" data-dismiss="modal">Aceptar</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section scripts{
+    <script>
+
+
+    //e  es el elemnto que hace aparecer el modal
+    //la informacion se le agrega en data-id y hay oportunidad de agregar mas como data-name, etc
+    //esa informacion se le asigna al btn ok del modal
+    $('#borrarModal').on('show.bs.modal', function (e) {
+        var data = $(e.relatedTarget).data();
+        $('.modal-title', this).text("¿Está seguro que desea borrar al proveedor '"+data.name+"'?");
+        $('.btn-ok', this).data('recordId', data.id);
+    });
+
+
+    //El boton modal cuando es clickeado lee la informacion que se le fue asignada anteriormente
+    //luego forma la url correcta y envia en modo post
+    $('#borrarModal').on('click', '.btn-ok', function (e) {
+        var $modalDiv = $(e.delegateTarget);
+        var $id = $(this).data('recordId');
+        var form = $('#__AjaxAntiForgeryForm');
+        var token = $('input[name="__RequestVerificationToken"]', form).val();
+
+        $.ajax({
+            type: "POST",
+            url: "/AdminFlota2/EliminarProveedor",
+            data: {
+                __RequestVerificationToken: token,
+                id: $id
+            },
+            success: function (result) {
+                location.reload(true);
+            },
+            error: function (response) {
+                //debugger;
+                alert('eror');
+            }
+        });
+    });
+
+
+
+    </script>
+}

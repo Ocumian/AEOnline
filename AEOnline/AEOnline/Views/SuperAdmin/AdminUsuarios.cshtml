@@ -1,0 +1,103 @@
+﻿@model IEnumerable<AEOnline.Models.Usuario>
+
+@{
+    ViewBag.Title = "AdminUsuarios";
+    Layout = "~/Views/Shared/_LayoutSuperAdmin.cshtml";
+
+    string rol = "";
+
+    if (Session["Rol"] != null)
+    {
+        rol += Session["Rol"].ToString();
+    }
+
+    if (rol != "SuperAdmin")
+    {
+        Response.Redirect("~/Login/Index");
+    }
+}
+
+<h2>Administración de usuarios</h2>
+
+<p>
+    @Html.ActionLink("Crear nuevo usuario", "CrearUsuario")
+</p>
+<table class="table">
+
+    @using (Html.BeginForm("AdminUsuarios", "SuperAdmin", FormMethod.Get))
+    {
+    <p>
+        Filtrar por Nombre/Email: @Html.TextBox("SearchString")
+        <input type="submit" value="Filtrar" />
+    </p>
+
+    <tr>
+        <th>
+            @Html.ActionLink("Nombre","AdminUsuarios","SuperAdmin", new { SortOrder = ViewBag.OrdenNombre}, null)
+        </th>
+        <th>
+            @Html.ActionLink("Email", "AdminUsuarios", "SuperAdmin", new { SortOrder = ViewBag.OrdenEmail }, null)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Rol)
+        </th>
+        <th>
+            Patente de auto
+        </th>
+        <th>
+            Flota administrada
+        </th>
+        <th></th>
+        <th></th>
+    </tr>
+    }
+
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Nombre)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Email)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Rol)
+            </td>
+            <td>
+                @{ 
+                    string patente = "-";
+
+                    if (item.Operador != null)
+                    {
+                        if (item.Operador.Auto != null)
+                        {
+                            patente = item.Operador.Auto.Patente;
+                        }
+                    }
+                }
+                @patente
+            </td>
+            <td>
+                @{
+                    string flota = "-";
+
+                    if (item.UsuarioFlota != null)
+                    {
+                        flota = item.UsuarioFlota.Flota.Nombre;
+                    }
+                }
+                @flota
+                
+            </td>
+            <td>
+                @Html.ActionLink("Editar Datos", "EditarUsuario", new { id = item.Id })
+            </td>
+            <td>
+                @Html.ActionLink("Eliminar", "EliminarUsuario", new { id = item.Id })
+            </td>
+        </tr>
+    }
+
+</table>
+

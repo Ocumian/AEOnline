@@ -1,0 +1,22 @@
+﻿
+@{
+    ViewBag.Title = "Delivery";
+    string nombre = "" + Session["Nombre"];
+
+    Layout = "~/Views/Shared/_LayoutUserNormal.cshtml";
+
+    string rol = "";
+
+    if (Session["Rol"] != null)
+    {
+        rol += Session["Rol"].ToString();
+    }
+
+    if (rol != "Normal")
+    {
+        Response.Redirect("~/Login/Index");
+    }
+}
+
+<h2>Delivery</h2>
+

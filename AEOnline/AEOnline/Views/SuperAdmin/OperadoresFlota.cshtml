@@ -1,0 +1,83 @@
+﻿@model IEnumerable<AEOnline.Models.Operador>
+@{
+    ViewBag.Title = "MiembrosFlota";
+    Layout = "~/Views/Shared/_LayoutSuperAdmin.cshtml";
+
+    string rol = "";
+
+    if (Session["Rol"] != null)
+    {
+        rol += Session["Rol"].ToString();
+    }
+
+    if (rol != "SuperAdmin")
+    {
+        Response.Redirect("~/Login/Index");
+    }
+}
+
+<h2>Operadores de la flota "@ViewBag.NombreFlota"</h2>
+
+<p>
+    @Html.ActionLink("Crear operador en esta flota", "CrearOperadorEnFlota", new { id = (int)ViewBag.FlotaId })
+</p>
+<table class="table">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.Nombre)
+        </th>
+        <th>
+            Usuario
+        </th>
+        <th>
+            Auto
+        </th>
+        <th>
+            Acciones
+        </th>
+
+    </tr>
+
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Nombre)
+            </td>
+            <td>
+                @{
+                    string user = "-";
+
+                    if (item.Usuario != null)
+                    {
+                        user = item.Usuario.Email;
+                    }
+                }
+                @user
+            </td>
+            <td>
+                @{
+                    string auto = "-";
+
+                    if (item.Auto != null)
+                    {
+                        auto = item.Auto.NombreVehiculo;
+                    }
+                }
+                @auto
+            </td>
+            <td>
+                @Html.ActionLink("Editar", "EditarOperadorDeFlota", new { id = item.Id , idFlota = (int)ViewBag.FlotaId })<br />
+                @Html.ActionLink("Eliminar", "EliminarOperadorDeFlota", new { id = item.Id, idFlota = (int)ViewBag.FlotaId })
+            </td>
+
+        </tr>
+    }
+
+</table>
+
+<div>
+    @Html.ActionLink("Volver a administrar flotas", "AdminFlotas")
+</div>
+
+

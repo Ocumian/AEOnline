@@ -1,0 +1,98 @@
+﻿@model AEOnline.Models.WebModels.CreacionAuto
+@{
+    ViewBag.Title = "EditarAuto";
+
+    Layout = "~/Views/Shared/_LayoutAdminFlota2.cshtml";
+
+    string rol = "";
+
+    if (Session["Rol"] != null)
+    {
+        rol += Session["Rol"].ToString();
+    }
+
+    if (rol != "AdminDeFlota")
+    {
+        Response.Redirect("~/Login/Index");
+    }
+}
+
+<body class="bg-dark">
+    @using (Html.BeginForm())
+    {
+        @Html.AntiForgeryToken()
+
+        <div class="container">
+            <div class="card card-register mx-auto mt-5">
+                <div class="card-header">Editar vehículo</div>
+                <div class="card-body">
+                    <form>
+                        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                        <div class="form-group">
+                            <div class="form-row">
+                                <div class="col-md-6">
+                                    <p>Nombre del vehículo</p>
+                                    @Html.EditorFor(model => model.NombreVehiculo, new { htmlAttributes = new { @class = "form-control" } })
+                                    @Html.ValidationMessageFor(model => model.NombreVehiculo, "", new { @class = "text-danger" })
+                                </div>
+                                <div class="col-md-6">
+                                    <p>Patente</p>
+                                    @Html.EditorFor(model => model.Patente, new { htmlAttributes = new { @class = "form-control" } })
+                                    @Html.ValidationMessageFor(model => model.Patente, "", new { @class = "text-danger" })
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="form-row">
+                                <div class="col-md-6">
+                                    <p>Marca</p>
+                                    @Html.EditorFor(model => model.Marca, new { htmlAttributes = new { @class = "form-control" } })
+                                    @Html.ValidationMessageFor(model => model.Marca, "", new { @class = "text-danger" })
+                                </div>
+                                <div class="col-md-6">
+                                    <p>Modelo</p>
+                                    @Html.EditorFor(model => model.Modelo, new { htmlAttributes = new { @class = "form-control" } })
+                                    @Html.ValidationMessageFor(model => model.Modelo, "", new { @class = "text-danger" })
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="form-row">
+                                <div class="col-md-6">
+                                    <p>Año</p>
+                                    @Html.EditorFor(model => model.Year, new { htmlAttributes = new { @class = "form-control" } })
+                                    @Html.ValidationMessageFor(model => model.Year, "", new { @class = "text-danger" })
+                                </div>
+                                <div class="col-md-6">
+                                    <p>Kilometraje Actual</p>
+                                    @Html.EditorFor(model => model.KilometrajeActual, new { htmlAttributes = new { @class = "form-control" } })
+                                    @Html.ValidationMessageFor(model => model.KilometrajeActual, "", new { @class = "text-danger" })
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="form-row">
+                                <div class="col-md-6">
+                                    <p>Tipo de vehículo</p>
+                                    @Html.DropDownList("TipoVehiculoId", null, htmlAttributes: new { @class = "form-control" })
+                                </div>
+                                <div class="col-md-6">
+                                    <p>Operadores disponibles</p>
+                                    @Html.DropDownList("OperadorId", null, htmlAttributes: new { @class = "form-control" })
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <input type="submit" value="Editar vehículo" class="btn btn-primary btn-block" />
+                        </div>
+                    </form>
+                    <div class="text-center">
+                        <a class="d-block small mt-3" href="@Url.Action("AdministrarAutos","AdminFlota2")"><< Regresar a la lista</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+</body>

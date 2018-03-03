@@ -1,0 +1,21 @@
+﻿
+@{
+    ViewBag.Title = "SinFlota";
+
+    Layout = "~/Views/Shared/_LayoutAdminFlota2.cshtml";
+
+    string rol = "";
+
+    if (Session["Rol"] != null)
+    {
+        rol += Session["Rol"].ToString();
+    }
+
+    if (rol != "AdminDeFlota")
+    {
+        Response.Redirect("~/Login/Index");
+    }
+}
+
+<h2>Usted no tiene una flota asignada</h2>
+

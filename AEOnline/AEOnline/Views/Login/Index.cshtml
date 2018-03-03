@@ -1,0 +1,56 @@
+﻿
+@{
+    ViewBag.Title = "Login";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    //Layout = "~/Views/Shared/_LayoutUserNormal.cshtml";
+    //Layout = "~/Views/Shared/_LayoutSuperAdmin.cshtml";
+    //Layout = "~/Views/Shared/_LayoutAdminFlota.cshtml";
+
+
+    string rol = "";
+
+    if (Session["Rol"] != null)
+    {
+        rol += Session["Rol"].ToString();
+    }
+
+    if (rol == "SuperAdmin")
+    {
+        Response.Redirect("~/SuperAdmin/Index");
+    }
+    if (rol == "AdminFlota")
+    {
+        Response.Redirect("~/AdminFlota/Index");
+    }
+    if (rol == "Normal")
+    {
+        Response.Redirect("~/UserNormal/Index");
+    }
+
+}
+
+<h2 class="col-md-6 col-md-offset-4">Ingreso de usuarios</h2>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-6 col-md-offset-4">
+
+            <div class="form-group">
+                @using (Html.BeginForm("Authenticate", "Login", FormMethod.Post))
+                {
+                    <input type="email" class="form-control" name="emailID" placeholder="Ingrese correo electrónico" required="required" />
+                    <br />
+                    <input type="password" class="form-control" name="passID" placeholder="Ingrese contraseña" required="required"/>
+                    <br />
+                    <button type="submit" class="btn btn-success" value="Ingresar">Ingresar</button>
+                    <br />
+                    <br />
+                    @TempData["msg"]
+                }
+            </div>
+
+        </div>
+    </div>
+</div>
+
+

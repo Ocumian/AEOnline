@@ -1,0 +1,148 @@
+﻿@model AEOnline.Models.Flota
+@{
+    ViewBag.Title = "MapaDeFlota";
+
+    Layout = "~/Views/Shared/_LayoutAdminFlota2.cshtml";
+
+    string rol = "";
+
+    if (Session["Rol"] != null)
+    {
+        rol += Session["Rol"].ToString();
+    }
+
+    if (rol != "AdminDeFlota")
+    {
+        Response.Redirect("~/Login/Index");
+    }
+}
+
+<style>
+    /* Always set the map height explicitly to define the size of the div
+      * element that contains the map. */
+    #map {
+        height: 550px;
+        width: 1000px;
+    }
+    /* Optional: Makes the sample page fill the window. */
+    html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+    }
+</style>
+
+<h2>Mapa de la flota</h2>
+
+<div id="map"></div>
+
+
+
+<script>
+    var map;
+    var markersMapa = [];
+
+    function initMap()
+    {
+
+        map = new google.maps.Map(document.getElementById('map'), {
+            center:
+            { lat: -40.574351, lng: -73.131871 },
+            zoom: 15
+        });
+
+        @{
+            List<AEOnline.Models.Auto> autos = Model.Autos;
+
+            for (int i = 0; i < autos.Count; i++)
+            {
+                <text>
+
+                var id = @autos[i].Id;
+                var patente = "@autos[i].Patente";
+                var Latitud = @autos[i].Latitud.ToString().Replace(',', '.');
+                var Longitud = @autos[i].Longitud.ToString().Replace(',', '.');
+
+                var marker = new google.maps.Marker(
+                {
+                    position:{ lat: Latitud , lng: Longitud },
+                    map: map,
+                    title: "Click para información",
+                    draggable: true
+                });
+                marker.set("patente", patente);
+                marker.set("id", id);
+                markersMapa.push(marker);
+
+                </text>
+            }
+        }
+
+        var infowindow = new google.maps.InfoWindow({
+            content: ""
+        });
+
+        for (var i = 0; i < Object.keys(markersMapa).length; i++)
+        {
+            markersMapa[i].addListener('click', function () {
+
+                var id = this.get("id");
+                infowindow.setContent("<strong>Patente:</strong> " + this.get("patente") + "</br>"
+                    + '<a href="/AdminFlota/FichaAuto/' + id + '?menu=0"> Ver ficha</a><br>'
+                    + '<a href="/AdminFlota/RegistrosCelular/' + id + '?tipo=1"> Ver registros celular</a><br>');
+
+                infowindow.open(map, this);
+            });
+        }
+
+
+        setInterval( function (){ ActualizarMarcador() } , 1000);
+
+
+        function ActualizarMarcador()
+            {
+
+            $.ajax({
+            type: "GET",
+            url: "/AdminFlota/getPosicionesFlota",
+            data:
+            {
+                nombreFlota: "@Model.Nombre"
+            },
+
+            contentType: "application/json;charset=utf-8",
+            dataType: "json",
+            success: function (result) {
+
+                        var array = JSON.parse(result.respuesta);
+                        var arrayLenght = Object.keys(array).length;
+
+                        for (var i = 0; i < arrayLenght; i++)
+                        {
+                            var patente = array[i].Patente;
+                            var latlng = new google.maps.LatLng(array[i].Latitud, array[i].Longitud);
+
+                            var markerfound = markersMapa.find(function (markerDeArray)
+                            {
+                                return markerDeArray.get("patente") == patente;
+                            });
+
+                        markerfound.setPosition(latlng);
+                    }
+                },
+            error: function (response) {
+                    //alert('eror');
+                }
+            });
+
+        }
+
+    }
+
+
+
+
+
+</script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDu0DHkQkZ-iHDrZr-ztGThEbUyUvgGPfM&callback=initMap"
+        async defer></script>

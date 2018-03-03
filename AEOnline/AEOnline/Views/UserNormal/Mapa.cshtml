@@ -1,0 +1,142 @@
+﻿@model AEOnline.Models.Auto
+@{
+    ViewBag.Title = "Mapa";
+    string nombre = "" + Session["Nombre"];
+
+    Layout = "~/Views/Shared/_LayoutUserNormal.cshtml";
+
+    string rol = "";
+
+    if (Session["Rol"] != null)
+    {
+        rol += Session["Rol"].ToString();
+    }
+
+    if (rol != "Normal")
+    {
+        Response.Redirect("~/Login/Index");
+    }
+
+}
+
+
+<style>
+    /* Always set the map height explicitly to define the size of the div
+      * element that contains the map. */
+    #map {
+        height: 600px;
+        width: 1000px;
+    }
+    /* Optional: Makes the sample page fill the window. */
+    html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+    }
+</style>
+<br /><br />
+
+
+
+<div class="row">
+    <h2>Posición actual del vehículo</h2>
+
+    @{ 
+        if(ViewBag.TieneAuto == false)
+        {
+            <text>
+            <h3>Usted no tiene un auto asignado</h3>
+            </text>
+        }
+        else
+        {
+            <text>
+
+        <div id="map"></div>
+
+        <script>
+
+            var map;
+
+
+            function initMap()
+            {
+
+            map = new google.maps.Map(document.getElementById('map'), {
+                center:
+                { lat: @Model.Latitud.ToString().Replace(',','.') , lng: @Model.Longitud.ToString().Replace(',', '.') },
+                //lat: -40.574351, lng: -73.131871 Osorno
+              zoom: 15
+              });
+
+            var marker = new google.maps.Marker(
+                {
+                position:{ lat: @Model.Latitud.ToString().Replace(',', '.'), lng: @Model.Longitud.ToString().Replace(',', '.') },
+                map: map,
+                title: "",
+                draggable: true
+                });
+
+
+            var coordenadasRuta = [
+                { lat: @Model.Latitud.ToString().Replace(',', '.'), lng: @Model.Longitud.ToString().Replace(',', '.') }
+            ];
+
+            var ruta = new google.maps.Polyline({
+                path: coordenadasRuta,
+                geodesic: true,
+                strokeColor: '#FF0000',
+                strokeOpacity: 1.0,
+                strokeWeight: 2
+            });
+
+            ruta.setMap(map);
+
+
+            setInterval( function (){ ActualizarMarcador() } , 1000);
+
+
+            function ActualizarMarcador() {
+
+                $.ajax({
+                type: "GET",
+                url: "/UserNormal/getPosicionAuto",
+                data:
+                {  
+                    patenteAuto: "@Model.Patente"
+                },
+
+                contentType: "application/json;charset=utf-8",
+                dataType: "json",
+                success: function (result) {
+
+                    var lati = JSON.parse(result.Latitud);
+                    var longi = JSON.parse(result.Longitud);
+
+                    var latlng = new google.maps.LatLng(lati, longi);
+                    marker.setPosition(latlng);
+                    path = ruta.getPath();
+                    path.push(latlng);
+                    ruta.setPath(path);
+
+                },
+                error: function (response) {
+                    alert('eror');
+                }
+            });
+
+            }
+
+        }
+
+
+
+        </script>
+        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDu0DHkQkZ-iHDrZr-ztGThEbUyUvgGPfM&callback=initMap"
+            async defer></script>
+
+            </text>
+        }
+    }
+
+</div>

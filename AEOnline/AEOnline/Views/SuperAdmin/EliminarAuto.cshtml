@@ -1,0 +1,101 @@
+﻿@model AEOnline.Models.Auto
+@{
+    ViewBag.Title = "EliminarAuto";
+    Layout = "~/Views/Shared/_LayoutSuperAdmin.cshtml";
+
+    string rol = "";
+
+    if (Session["Rol"] != null)
+    {
+        rol += Session["Rol"].ToString();
+    }
+
+    if (rol != "SuperAdmin")
+    {
+        Response.Redirect("~/Login/Index");
+    }
+
+}
+
+<h2>Está seguro que desea eliminar el auto @Model.NombreVehiculo , patente @Model.Patente junto a todos sus registros ?</h2>
+
+<hr />
+<dl class="dl-horizontal">
+    <dt>
+        @Html.DisplayNameFor(model => model.NombreVehiculo)
+    </dt>
+
+    <dd>
+        @Html.DisplayFor(model => model.NombreVehiculo)
+    </dd>
+
+    <dt>
+        @Html.DisplayNameFor(model => model.Patente)
+    </dt>
+
+    <dd>
+        @Html.DisplayFor(model => model.Patente)
+    </dd>
+
+    <dt>
+        @Html.DisplayNameFor(model => model.Modelo)
+    </dt>
+
+    <dd>
+        @Html.DisplayFor(model => model.Modelo)
+    </dd>
+
+    <dt>
+        @Html.DisplayNameFor(model => model.Marca)
+    </dt>
+
+    <dd>
+        @Html.DisplayFor(model => model.Marca)
+    </dd>
+
+    <dt>
+        @Html.DisplayNameFor(model => model.Year)
+    </dt>
+
+    <dd>
+        @Html.DisplayFor(model => model.Year)
+    </dd>
+
+    <dt>
+        @Html.DisplayNameFor(model => model.KilometrajeActual)
+    </dt>
+
+    <dd>
+        @Html.DisplayFor(model => model.KilometrajeActual)
+    </dd>
+
+    <dt>
+        Flota perteneciente
+    </dt>
+
+    <dd>
+        @{
+            string nFlota = "-";
+
+            if (Model.Flota != null)
+            {
+                nFlota = Model.Flota.Nombre;
+            }
+        }
+        @nFlota
+    </dd>
+
+</dl>
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+
+    <div class="form-actions no-color">
+        <input type="submit" value="Confirmar Eliminación" class="btn btn-default" />
+    </div>
+
+    <div class="form-actions no-color">
+        @Html.ActionLink("Volver a lista de Autos", "AdminAutos")
+    </div>
+}

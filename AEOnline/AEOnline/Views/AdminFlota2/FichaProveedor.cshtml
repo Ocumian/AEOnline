@@ -1,0 +1,126 @@
+﻿@model AEOnline.Models.Proveedor
+@{
+    ViewBag.Title = "FichaProveedor";
+
+    Layout = "~/Views/Shared/_LayoutAdminFlota2.cshtml";
+
+    string rol = "";
+
+    if (Session["Rol"] != null)
+    {
+        rol += Session["Rol"].ToString();
+    }
+
+    if (rol != "AdminDeFlota")
+    {
+        Response.Redirect("~/Login/Index");
+    }
+}
+
+<div class="container">
+    <div class="card card-register mx-auto mt-5">
+        <div class="card-header">Datos generales</div>
+        <div class="card-body">
+
+                <div class="form-group">
+                    <div class="form-row">
+                        <div class="col-md-6">
+                            <dl class="dl-horizontal">
+                                <dt>
+                                    Nombre comercial
+                                </dt>
+
+                                <dd>
+                                    @Html.DisplayFor(model => model.NombreComercial)
+                                </dd>
+
+                                <dt>
+                                    Teléfono
+                                </dt>
+
+                                <dd>
+                                    @Html.DisplayFor(model => model.Telefono)
+                                </dd>
+
+                                <dt>
+                                    Dirección
+                                </dt>
+
+                                <dd>
+                                    @Html.DisplayFor(model => model.Direccion)
+                                </dd>
+
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            <dl class="dl-horizontal">
+                                <dt>
+                                    Persona de contacto
+                                </dt>
+
+                                <dd>
+                                    @Html.DisplayFor(model => model.PersonaContacto)
+                                </dd>
+
+                                <dt>
+                                    Teléfono de Contacto
+                                </dt>
+
+                                <dd>
+                                    @Html.DisplayFor(model => model.TelefonoContacto)
+                                </dd>
+
+                                <dt>
+                                    Email de Contacto
+                                </dt>
+
+                                <dd>
+                                    @Html.DisplayFor(model => model.EmailContacto)
+                                </dd>
+
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+        </div>
+
+
+        <div class="card-header">Registros</div>
+        <div class="card-body">
+
+            <div class="form-group">
+                <div class="form-row">
+
+                    
+                    <div class="col-md-6">
+
+                        <dl class="dl-horizontal">
+                            <dt>
+                                Gasto en combustible
+                            </dt>
+
+                            <dd>
+                                @Html.DisplayFor(model => model.GastoTotalCombustible)
+                            </dd>
+                        </dl>
+                    </div>
+                    <div class="col-md-6">
+                        <dl class="dl-horizontal">
+                            <dt>
+                                Gasto en mantenciones
+                            </dt>
+
+                            <dd>
+                                @Html.DisplayFor(model => model.GastoTotalMantenimiento)
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center">
+                <a class="d-block small mt-3" href="@Url.Action("AdministrarProveedores","AdminFlota2")"><< Regresar a la lista</a>
+            </div>
+        </div>
+    </div>
+</div>

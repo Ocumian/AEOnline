@@ -1,0 +1,150 @@
+﻿<script src="~/Scripts/Extra/echarts.js"></script>
+
+<style>
+    /* Always set the map height explicitly to define the size of the div
+      * element that contains the map. */
+    #container {
+        height: 500px;
+        width: 1000px;
+    }
+</style>
+
+
+
+<div id="container"></div>
+
+
+
+<script type="text/javascript">
+
+
+    var dom = document.getElementById("container");
+    var myChart = echarts.init(dom);
+    var app = {};
+    option = null;
+
+
+    var data = [];
+
+
+    option = {
+        title: {
+            text: 'Grafico ejemplo',
+            subtext: 'Subtitulo'
+        },
+        tooltip: {
+            trigger: 'item',
+            formatter: function (params) {
+                var date = new Date(params.value[0]);
+                data = date.getFullYear() + '-'
+                    + (date.getMonth() + 1) + '-'
+                    + date.getDate() + ' '
+                    + date.getHours() + ':'
+                    + date.getMinutes();
+                return data + '<br/>'
+                    + params.value[1] 
+            }
+        },
+        toolbox: {
+            show: true,
+            feature: {
+                mark: { show: true },
+                dataView: { show: true, readOnly: false },
+                restore: { show: true },
+                saveAsImage: { show: true }
+            }
+        },
+        dataZoom: {
+            show: true,
+            start: 70
+        },
+        legend: {
+            data: ['series1']
+        },
+        grid: {
+            y2: 80
+        },
+        xAxis: [
+            {
+                type: 'time',
+                splitNumber: 10
+            }
+        ],
+        yAxis: [
+            {
+                type: 'value'
+            }
+        ],
+        series: [
+            {
+                name: 'Velocidad',
+                type: 'line',
+                showAllSymbol: true,
+                //symbolSize: function (value) {
+                //    return Math.round(value[2] / 10) + 2;
+                //},
+
+                symbolSize: 10,
+                //data: (function () {
+                //    var d = [];
+                //    var len = 0;
+                //    var now = new Date();
+                //    var value;
+                //    while (len++ < 200) {
+                //        d.push([
+                //            new Date(2014, 9, 1, 0, len * 10000),
+                //            (Math.random() * 30).toFixed(2) - 0,
+                //            (Math.random() * 100).toFixed(2) - 0
+                //        ]);
+                //    }
+                //    return d;
+                //})()
+
+                data: CrearDatos()
+            }
+        ]
+    };
+
+    
+
+    function CrearDatos()
+    {
+        var d = [];
+        var len = 0;
+        var now = new Date();
+        var value;
+        while (len++ < 10) {
+            d.push([
+                new Date(2014, 9, 1, 0, len * 10000),
+                5
+                //(Math.random() * 30).toFixed(2) - 0,
+                //(Math.random() * 100).toFixed(2) - 0
+            ]);
+        }
+
+        d = [[new Date(2000, 3, 1, 0, 0, 0), 8], [new Date(2000, 3, 2), 4]];
+
+        return d;
+    }
+
+    //setInterval(function () {
+
+    //    for (var i = 0; i < 5; i++) {
+    //        data.shift();
+    //        data.push(randomData());
+    //    }
+
+    //    myChart.setOption({
+    //        series: [{
+    //            data: data
+    //        }]
+    //    });
+    //}, 5000);;
+
+
+
+
+    if (option && typeof option === "object") {
+        myChart.setOption(option, true);
+    }
+</script>

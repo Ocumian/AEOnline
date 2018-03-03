@@ -1,0 +1,77 @@
+﻿@model IEnumerable<AEOnline.Models.Auto>
+@{
+    ViewBag.Title = "AdminAutos";
+    Layout = "~/Views/Shared/_LayoutSuperAdmin.cshtml";
+
+    string rol = "";
+
+    if (Session["Rol"] != null)
+    {
+        rol += Session["Rol"].ToString();
+    }
+
+    if (rol != "SuperAdmin")
+    {
+        Response.Redirect("~/Login/Index");
+    }
+}
+
+<h2>Administración de autos</h2>
+
+<p>
+    @Html.ActionLink("Crear nuevo auto", "CrearAuto")
+</p>
+<table class="table">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.Patente)
+        </th>
+        <th>
+            Nombre de chofer
+        </th>
+        <th>
+            Nombre de flota
+        </th>
+
+        <th></th>
+        <th></th>
+    </tr>
+
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Patente)
+            </td>
+            <td>
+                @{
+                    string nChofer = "-";
+
+                    if (item.Operador != null)
+                    {
+                        nChofer = item.Operador.Usuario.Nombre;
+                    }
+                }
+                @nChofer
+            </td>
+            <td>
+                @{
+                    string nFlota = "-";
+
+                    if (item.Flota != null)
+                    {
+                        nFlota = item.Flota.Nombre;
+                    }
+                }
+                @nFlota
+            </td>
+            <td>
+                @Html.ActionLink("Editar Datos", "EditarAuto", new { id = item.Id })
+            </td>
+            <td>
+                @Html.ActionLink("Eliminar", "EliminarAuto", new { id = item.Id })
+            </td>
+        </tr>
+     }
+
+</table>
