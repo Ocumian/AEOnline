@@ -88,7 +88,7 @@
                                             <a class="dropdown-item" href="@Url.Action("EditarMantencion","AdminFlota2", new { id = item.Id, autoId = item.Auto.Id})">
                                                 <div class="dropdown-message small"><i class="fa fa-fw fa-edit"></i> Editar</div>
                                             </a>
-                                            <a class="dropdown-item" href="#" data-toggle="modal" data-target="#borrarModal"
+                                            <a class="dropdown-item" href="#" data-toggle="modal" data-target="#borrarModalMantencion"
                                                data-id="@item.Id" data-name="@item.Fecha" data-autoid="@item.Auto.Id">
                                                 <div class="dropdown-message small"><i class="fa fa-fw fa-trash-o"></i>Eliminar</div>
                                             </a>
@@ -111,7 +111,7 @@
 }
 
 <!-- Delete Modal-->
-<div class="modal fade" id="borrarModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+<div class="modal fade" id="borrarModalMantencion" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -120,7 +120,7 @@
                     <span aria-hidden="true">×</span>
                 </button>
             </div>
-            <div class="modal-body">Se eliminará el resgistro de esta fecha. ¿Está seguro de hacerlo?</div>
+            <div class="modal-body">Se eliminará el resgistro de mantención esta fecha. ¿Está seguro de hacerlo?</div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancelar</button>
                 <a class="btn btn-primary btn-ok" href="#" data-dismiss="modal">Aceptar</a>
@@ -129,14 +129,15 @@
     </div>
 </div>
 
-@section scripts{
-    <script>
+<script>
+
+    $('document').ready(function () {
 
 
         //e  es el elemnto que hace aparecer el modal
         //la informacion se le agrega en data-id y hay oportunidad de agregar mas como data-name, etc
         //esa informacion se le asigna al btn ok del modal
-        $('#borrarModal').on('show.bs.modal', function (e) {
+        $('#borrarModalMantencion').on('show.bs.modal', function (e) {
             var data = $(e.relatedTarget).data();
             $('.modal-title', this).text("¿Está seguro que desea borrar el registro de la fecha '" + data.name + "'?");
             $('.btn-ok', this).data('recordId', data.id);
@@ -146,7 +147,7 @@
 
         //El boton modal cuando es clickeado lee la informacion que se le fue asignada anteriormente
         //luego forma la url correcta y envia en modo post
-        $('#borrarModal').on('click', '.btn-ok', function (e) {
+        $('#borrarModalMantencion').on('click', '.btn-ok', function (e) {
             var $modalDiv = $(e.delegateTarget);
             var $id = $(this).data('recordId');
             var $autoid = $(this).data('autoId');
@@ -170,8 +171,7 @@
                 }
             });
         });
+    });
+        
 
-
-
-    </script>
-}
+</script>

@@ -13,8 +13,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.min.js"></script>
-    
-
+   
 </head>
 <body>
     <div class="navbar navbar-inverse navbar-fixed-top">
@@ -26,13 +25,16 @@
                     <span class="icon-bar"></span>
                 </button>
                 @{ 
-                    string bienvenida = "Bienvenido " + Session["Nombre"];
+                    string bienvenida = "Stapp";
                 }
                 @Html.ActionLink( bienvenida, "Index", "Login", new { area = "" }, new { @class = "navbar-brand" })
             </div>
             <div class="navbar-collapse collapse">
-                <ul class="nav navbar-nav">
+                <ul class="nav navbar-nav navbar-right">
                     <li>@Html.ActionLink("Registrate", "RegistroUsuario", "Login")</li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    <li>@Html.ActionLink("Acerca de", "AcercaDe", "Login")</li>
                 </ul>
             </div>
         </div>
@@ -40,8 +42,12 @@
     <div class="container body-content">
         @RenderBody()
         <hr />
-        <footer>
-            <p>&copy; @DateTime.Now.Year - Mi aplicación ASP.NET</p>
+        <footer>  
+            <p>&copy; @DateTime.Now.Year - Stapp v1.1</p>
+            <p><a href="//www.ayn.cl">www.ayn.cl</a></p>
+            <a href="//www.ayn.cl">
+                <img src="~/Imagenes/logo-ayn.jpg" alt="www.ayn.cl" style="height: 71px; width: 94px"/>
+            </a>
         </footer>
     </div>
 

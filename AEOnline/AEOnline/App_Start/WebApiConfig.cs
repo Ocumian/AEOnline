@@ -67,6 +67,13 @@ namespace AEOnline
             ActionConfiguration fechaHoy = builder.Entity<Auto>().Collection.Action("FechaHoy");
             fechaHoy.Returns<DateTime>();
 
+            ActionConfiguration distanciaPuntos = builder.Entity<Auto>().Collection.Action("DistanciaPuntos");
+            distanciaPuntos.Parameter<double>("latInicio");
+            distanciaPuntos.Parameter<double>("lngInicio");
+            distanciaPuntos.Parameter<double>("latFinal");
+            distanciaPuntos.Parameter<double>("lngFinal");
+            distanciaPuntos.Returns<double>();
+
             #endregion
 
 
@@ -96,6 +103,8 @@ namespace AEOnline
             cargarCombustible.Parameter<int>("CostoUnitario");
             cargarCombustible.Parameter<int>("Kilometraje");
             cargarCombustible.Parameter<int>("IdProveedor");
+            cargarCombustible.Parameter<string>("RutProveedor");
+            cargarCombustible.Parameter<int>("NumeroBoleta");
 
             #endregion
 
@@ -112,10 +121,11 @@ namespace AEOnline
             asignarPatente.Parameter<string>("Password");
 
 
-            ActionConfiguration actualizarVelocidadLista = builder.Entity<Auto>().Collection.Action("ActualizarVelocidadLista");
-            actualizarVelocidadLista.Returns<IHttpActionResult>();
-            actualizarVelocidadLista.Parameter<int>("Id");
-            actualizarVelocidadLista.CollectionParameter<RegistroHistorial>("Registros");
+            ActionConfiguration actualizarVelocidadListaDX = builder.Entity<Auto>().Collection.Action("ActualizarVelocidadListaDX");
+            actualizarVelocidadListaDX.Returns<string>();
+            actualizarVelocidadListaDX.Parameter<int>("Id");
+            actualizarVelocidadListaDX.CollectionParameter<RegistroHistorial>("Registros");
+
 
             ActionConfiguration actualizarEnergia = builder.Entity<Auto>().Collection.Action("ActualizarEnergia");
             actualizarEnergia.Returns<IHttpActionResult>();
@@ -132,11 +142,20 @@ namespace AEOnline
             actualizarEnergia.Parameter<float>("ValorMayor");
             actualizarEnergia.Parameter<float>("ValorMitad");
 
+            ActionConfiguration actualizarPosicionDX = builder.Entity<Auto>().Collection.Action("ActualizarPosicionListaDX");
+            actualizarPosicionDX.Returns<string>();
+            actualizarPosicionDX.Parameter<int>("Id");
+            actualizarPosicionDX.CollectionParameter<Posicion>("ListaPosiciones");
 
-            ActionConfiguration actualizarPosicionLista = builder.Entity<Auto>().Collection.Action("ActualizarPosicionLista");
-            actualizarPosicionLista.Returns<IHttpActionResult>();
-            actualizarPosicionLista.Parameter<int>("Id");
-            actualizarPosicionLista.CollectionParameter<Posicion>("ListaPosiciones");
+            ActionConfiguration actualizarPosicionDXZ = builder.Entity<Auto>().Collection.Action("ActualizarPosicionListaDXZ");
+            actualizarPosicionDXZ.Returns<string>();
+            actualizarPosicionDXZ.Parameter<int>("Id");
+            actualizarPosicionDXZ.CollectionParameter<Posicion>("ListaPosiciones");
+
+            ActionConfiguration actualizarPosicionDXZgps = builder.Entity<Auto>().Collection.Action("ActualizarPosicionListaDXZGPS");
+            actualizarPosicionDXZgps.Returns<string>();
+            actualizarPosicionDXZgps.Parameter<int>("Id");
+            actualizarPosicionDXZgps.CollectionParameter<Posicion>("ListaPosiciones");
 
             ActionConfiguration obtenerHistorialVel = builder.Entity<Auto>().Collection.Action("ObtenerHistorialesVelocidad");
             obtenerHistorialVel.ReturnsCollectionFromEntitySet<HistorialVelocidad>("HistorialVelocidades");

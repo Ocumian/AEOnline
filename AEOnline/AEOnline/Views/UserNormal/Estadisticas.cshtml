@@ -30,7 +30,8 @@
 
         <table class="table">
             <tr>
-                <th>@Html.DropDownList("MyType", EnumHelper.GetSelectList((Type)ViewBag.TiposHistorial), "Seleccione tipo de historial", new { @class = "form-control" })           
+                <th>
+                    @Html.DropDownList("MyType", null, "Seleccione tipo de historial", new { @class = "form-control" })
                 </th>
                 <th>            
                     <input type="text" value="@Model.Fecha.ToString("dd/MM/yyyy")"  id="Fecha" name="Fecha" class="form-control" />

@@ -190,6 +190,18 @@ namespace AEOnline.Models
 
         }
 
+        public static void EditarPasswordUsuario(ProyectoAutoContext _db, int _idUser, string _nuevaPass)
+        {
+            Usuario user = _db.Usuarios.Where(u => u.Id == _idUser).FirstOrDefault();
+
+            if(_nuevaPass.Trim() != "")
+            {
+                string passEncriptada = PasswordHash.CreateHash(_nuevaPass.Trim());
+                user.Password = passEncriptada;
+                _db.SaveChanges();
+            }
+        }
+
         public static void EliminarUsuario(ProyectoAutoContext _db, int _idUser)
         {
             Usuario user = _db.Usuarios.Where(u => u.Id == _idUser).FirstOrDefault();

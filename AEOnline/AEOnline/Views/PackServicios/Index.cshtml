@@ -1,0 +1,71 @@
+﻿@model IEnumerable<AEOnline.Models.PackServicio>
+
+@{
+    ViewBag.Title = "Index";
+
+    Layout = "~/Views/Shared/_LayoutSuperAdmin.cshtml";
+
+    string rol = "";
+
+    if (Session["Rol"] != null)
+    {
+        rol += Session["Rol"].ToString();
+    }
+
+    if (rol != "SuperAdmin")
+    {
+        Response.Redirect("~/Login/Index");
+    }
+}
+
+<h2>Packs de servicio</h2>
+
+<p>
+    @Html.ActionLink("Crear nuevo pack", "Create")
+</p>
+<table class="table">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.Nombre)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.NumeroVehiculos)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.NumeroOperadores)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.ModuloCombustible)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.ModuloMantencion)
+        </th>
+        <th></th>
+    </tr>
+
+@foreach (var item in Model) {
+    <tr>
+        <td>
+            @Html.DisplayFor(modelItem => item.Nombre)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.NumeroVehiculos)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.NumeroOperadores)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.ModuloCombustible)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.ModuloMantencion)
+        </td>
+        <td>
+            @Html.ActionLink("Editar", "Edit", new { id=item.Id }) |
+            @Html.ActionLink("Detalles", "Details", new { id=item.Id }) |
+            @Html.ActionLink("Eliminar", "Delete", new { id=item.Id })
+        </td>
+    </tr>
+}
+
+</table>

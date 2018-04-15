@@ -24,17 +24,20 @@
             Registrar nuevo auto
         </a>
     </div>
-    <div class="btn-group float-right m-lg-1">
+    @*<div class="btn-group float-right m-lg-1">
         <a href="@Url.Action("HistorialesCombustible","AdminFlota2")" class="btn btn-primary">
             <i class="fa fa-fw fa-tint"></i>
-            Cargas de combustible
+            Historiales combustible
         </a>
-    </div>
+    </div>*@
 </div>
 
 <div class="card mb-3">
-    <div class="card-header">
-        <h1>@TempData["msg"]</h1>
+    <div class="card-header" id="cuadroMensaje">
+        <div class="alert alert-success" role="alert">
+            <h4 id="lblMensaje">@TempData["msg"]</h4>
+        </div>
+
         <i class="fa fa-table"></i><strong><font size="5"> Vehículos</font></strong>
     </div>
     <div class="card-body">
@@ -53,13 +56,13 @@
                             Tipo de vehículo
                         </th>
                         <th>
-                            Datos extra
-                        </th>
-                        <th>
                             Operador
                         </th>
                         <th>
                             Kilometraje actual
+                        </th>
+                        <th>
+                            Acceso en panel Inicio
                         </th>
                         <th>
                             Registros móviles
@@ -95,11 +98,6 @@
                                 @tipo
                             </td>
                             <td>
-                                @Html.DisplayFor(modelItem => item.Marca)<br />
-                                @Html.DisplayFor(modelItem => item.Modelo)<br />
-                                @Html.DisplayFor(modelItem => item.Year)
-                            </td>
-                            <td>
                                 @{
                                     string nOperador = "-";
 
@@ -112,6 +110,9 @@
                             </td>
                             <td>
                                 @Html.DisplayFor(modelItem => item.KilometrajeActual)
+                            </td>
+                            <td>
+                                @Html.CheckBoxFor(modelItem => item.Atajo,  new { onclick = "checkBoxClick("+item.Id+")" })
                             </td>
                             <td>
                                 <div class="btn-group m-lg-1">
@@ -179,6 +180,14 @@
 @section scripts{
 <script>
 
+    $mensaje = $('#lblMensaje');
+
+    document.getElementById("cuadroMensaje").style.display = "none";
+
+    if ($mensaje.text() != "")
+    {
+        document.getElementById("cuadroMensaje").style.display = "block";
+    }
 
     //e  es el elemnto que hace aparecer el modal
     //la informacion se le agrega en data-id y hay oportunidad de agregar mas como data-name, etc
@@ -215,6 +224,28 @@
         });
     });
 
+
+    function checkBoxClick(idAuto)
+    {
+        var form = $('#__AjaxAntiForgeryForm');
+        var token = $('input[name="__RequestVerificationToken"]', form).val();
+
+        $.ajax({
+            type: "POST",
+            url: "/AdminFlota2/CambiarAtajoAuto",
+            data: {
+                __RequestVerificationToken: token,
+                AutoId: idAuto
+            },
+            success: function (result) {
+                //location.reload(true);
+            },
+            error: function (response) {
+                //debugger;
+                alert('eror');
+            }
+        });
+    }
 
 
 </script>

@@ -61,6 +61,24 @@ namespace AEOnline.Controllers
             return DateTime.Now;
         }
 
+        //POST: odata/Autos/DistanciaPuntos
+        //Parametros: latInicio,lngInicio,latFinal,lngFinal
+        public double DistanciaPuntos(ODataActionParameters parameters)
+        {
+            if (parameters == null)
+                return -1;
+
+            double latInicio = (double)parameters["latInicio"];
+            double lngInicio = (double)parameters["lngInicio"];
+            double latFinal = (double)parameters["latFinal"];
+            double lngFinal = (double)parameters["lngFinal"];
+
+            var sCoord = new GeoCoordinate(latInicio, lngInicio);
+            var eCoord = new GeoCoordinate(latFinal, lngFinal);
+
+            return sCoord.GetDistanceTo(eCoord);
+        }
+
 
         //POST: odata/Autos/AsignarPatente
         //Parametros: NuevaPatente, Email, Password
@@ -100,126 +118,158 @@ namespace AEOnline.Controllers
             return new RespuestaOdata() { Id = auto.Id, Mensaje = "Patente asignada correctamente." };
         }
 
+
         //POST: odata/Autos/ActualizarVelocidadLista
         //Parametros: Id,Registros
         //(FechaHora,Valor)
-        public IHttpActionResult ActualizarVelocidadLista(ODataActionParameters parameters)
+        public string ActualizarVelocidadListaDX(ODataActionParameters parameters)
         {
             if (parameters == null)
-                return BadRequest();
+                return "Error";
 
-            int id = (int)parameters["Id"];
-            var registros = parameters["Registros"] as IEnumerable<RegistroHistorial>;
-            List<RegistroHistorial> listaRegistros = registros.ToList();
-
-            for (int i = 0; i < listaRegistros.Count; i++)
+            try
             {
-                string horaRegistroString = listaRegistros[i].FechaHora;
-                DateTime horaRegistro;
-                bool result = DateTime.TryParseExact(horaRegistroString,
-                         FormatoFecha.formato, FormatoFecha.provider, DateTimeStyles.None, out horaRegistro);
+                int size = 10;
 
-                if (result == false)
-                    return BadRequest();
+                int id = (int)parameters["Id"];
+                var registros = parameters["Registros"] as IEnumerable<RegistroHistorial>;
+                List<RegistroHistorial> listaRegistros = registros.ToList();
 
-                listaRegistros[i].FechaDateTime = horaRegistro;
+                if (listaRegistros.Count == 1)
+                    return "Ok";
+
+                //SE CREAN GRUPOS DE 10 EN 10 O DEPENDE DE "size"
+                List<List<RegistroHistorial>> gruposDeRegistros = new List<List<RegistroHistorial>>();
+
+                for (int i = 0; i < listaRegistros.Count; i += size)
+                    gruposDeRegistros.Add(listaRegistros.GetRange(i, Math.Min(size, listaRegistros.Count - i)));
+
+
+                Auto auto = db.Autos.Where(a => a.Id == id).FirstOrDefault();
+                if (auto == null)
+                    return "Error";
+
+
+                List<HistorialVelocidad> historialesVelocidadCreados = new List<HistorialVelocidad>();
+
+                //SE RECORREN LOS GRUPOS Y SE CREA UN HISTORIAL VELOCIDAD POR CADA UNO,
+                //Se agrega a la lista
+
+                for (int r = 0; r < gruposDeRegistros.Count; r++)
+                {
+                    List<RegistroHistorial> grupoActual = gruposDeRegistros[r];
+
+                    for (int i = 0; i < grupoActual.Count; i++)
+                    {
+                        //Se recorren los registros y se le asigna la fecha correspondiente
+
+                        string horaRegistroString = grupoActual[i].FechaHora;
+                        DateTime horaRegistro;
+                        bool result = DateTime.TryParseExact(horaRegistroString,
+                                 FormatoFecha.formato, FormatoFecha.provider, DateTimeStyles.None, out horaRegistro);
+
+                        if (result == false)
+                            return "Error";
+
+                        grupoActual[i].FechaDateTime = horaRegistro;
+                    }
+
+                    grupoActual = grupoActual.OrderBy(u => u.FechaDateTime).ToList();
+
+                    RegistroHistorial registroInicio = grupoActual.First();
+                    RegistroHistorial registroFinal = grupoActual.Last();
+                    RegistroHistorial registro1Cuarto = null;
+                    RegistroHistorial registroMitad = null;
+                    RegistroHistorial registro3Cuartos = null;
+                    RegistroHistorial registroMayor = null;
+                    RegistroHistorial registrosMenor = null;
+
+                    float valorMayor = 0;
+                    float valorMenor = float.MaxValue;
+                    float valor1Cuarto = (grupoActual.Count / 4);
+                    float valorMitad = (grupoActual.Count / 2);
+                    float valor3Cuartos = (grupoActual.Count / 4) * 3;
+
+
+                    for (int i = 0; i < grupoActual.Count; i++)
+                    {
+                        RegistroHistorial regActual = grupoActual[i];
+
+                        if (regActual.Valor >= valorMayor)
+                        {
+                            registroMayor = regActual;
+                            valorMayor = regActual.Valor;
+                        }
+
+                        if (regActual.Valor <= valorMenor)
+                        {
+                            registrosMenor = regActual;
+                            valorMenor = regActual.Valor;
+                        }
+
+                        if (registro1Cuarto == null && i >= valor1Cuarto)
+                        {
+                            registro1Cuarto = regActual;
+                        }
+
+                        if (registroMitad == null && i >= valorMitad)
+                        {
+                            registroMitad = regActual;
+                        }
+
+                        if (registro3Cuartos == null && i >= valor3Cuartos)
+                        {
+                            registro3Cuartos = regActual;
+                        }
+                    }
+
+                    HistorialVelocidad nuevoHistorial = new HistorialVelocidad();
+                    nuevoHistorial.HoraRegistro = DateTime.Now;
+                    nuevoHistorial.HoraInicio = registroInicio.FechaDateTime;
+                    nuevoHistorial.HoraFinal = registroFinal.FechaDateTime;
+                    nuevoHistorial.HoraMenor = registrosMenor.FechaDateTime;
+                    nuevoHistorial.HoraMayor = registroMayor.FechaDateTime;
+                    nuevoHistorial.HoraMitad = registroMitad.FechaDateTime;
+                    nuevoHistorial.HoraUnCuarto = registro1Cuarto.FechaDateTime;
+                    nuevoHistorial.HoraTresCuartos = registro3Cuartos.FechaDateTime;
+
+                    nuevoHistorial.ValorInicio = registroInicio.Valor;
+                    nuevoHistorial.ValorFinal = registroFinal.Valor;
+                    nuevoHistorial.ValorMayor = registroMayor.Valor;
+                    nuevoHistorial.ValorMenor = registrosMenor.Valor;
+                    nuevoHistorial.ValorMitad = registroMitad.Valor;
+                    nuevoHistorial.ValorUnCuarto = registro1Cuarto.Valor;
+                    nuevoHistorial.ValorTresCuartos = registro3Cuartos.Valor;
+
+                    historialesVelocidadCreados.Add(nuevoHistorial);
+                }
+
+
+                List<HistorialDiario> HistDiarioEnRango = CrearHistorialesDiariosEnRango(historialesVelocidadCreados.First().HoraInicio, historialesVelocidadCreados.Last().HoraFinal, auto);
+
+
+                //Se registran en la base de datos los historiales creados
+                for (int i = 0; i < historialesVelocidadCreados.Count; i++)
+                {
+                    HistorialDiario histCorrespondiente = HistDiarioEnRango.Where(h => h.Fecha.Year == historialesVelocidadCreados[i].HoraMitad.Year
+                                                                   && h.Fecha.Month == historialesVelocidadCreados[i].HoraMitad.Month
+                                                                   && h.Fecha.Day == historialesVelocidadCreados[i].HoraMitad.Day).FirstOrDefault();
+
+                    histCorrespondiente.historialesVelocidad.Add(historialesVelocidadCreados[i]);
+                }
+
+
+                db.SaveChanges();
+
+                return "Ok";
             }
-
-            listaRegistros = listaRegistros.OrderBy(r => r.FechaDateTime).ToList();
-
-            RegistroHistorial registroInicio = listaRegistros.First();
-            RegistroHistorial registroFinal = listaRegistros.Last();
-            RegistroHistorial registro1Cuarto = null;
-            RegistroHistorial registroMitad = null;
-            RegistroHistorial registro3Cuartos = null;
-            RegistroHistorial registroMayor = null;
-            RegistroHistorial registrosMenor = null;
-
-            float valorMayor = 0;
-            float valorMenor = float.MaxValue;
-            float valor1Cuarto = (listaRegistros.Count / 4);
-            float valorMitad = (listaRegistros.Count / 2);
-            float valor3Cuartos = (listaRegistros.Count / 4) * 3;
-
-
-            for (int i = 0; i < listaRegistros.Count; i++)
+            catch
             {
-                RegistroHistorial regActual = listaRegistros[i];
-
-                if (regActual.Valor > valorMayor)
-                {
-                    registroMayor = regActual;
-                    valorMayor = regActual.Valor;
-                }
-
-                if (regActual.Valor < valorMenor)
-                {
-                    registrosMenor = regActual;
-                    valorMenor = regActual.Valor;
-                }
-
-                if(registro1Cuarto == null && i > valor1Cuarto)
-                {
-                    registro1Cuarto = regActual;
-                }
-
-                if (registroMitad == null && i > valorMitad)
-                {
-                    registroMitad = regActual;
-                }
-
-                if(registro3Cuartos == null && i > valor3Cuartos)
-                {
-                    registro3Cuartos = regActual;
-                }
+                return "CatchWebService";
             }
-
-
-            HistorialVelocidad nuevoHistorial = new HistorialVelocidad();
-            nuevoHistorial.HoraRegistro = DateTime.Now;
-            nuevoHistorial.HoraInicio = registroInicio.FechaDateTime;
-            nuevoHistorial.HoraFinal = registroFinal.FechaDateTime;
-            nuevoHistorial.HoraMenor = registrosMenor.FechaDateTime;
-            nuevoHistorial.HoraMayor = registroMayor.FechaDateTime;
-            nuevoHistorial.HoraMitad = registroMitad.FechaDateTime;
-            nuevoHistorial.HoraUnCuarto = registro1Cuarto.FechaDateTime;
-            nuevoHistorial.HoraTresCuartos = registro3Cuartos.FechaDateTime;
-
-            nuevoHistorial.ValorInicio = registroInicio.Valor;
-            nuevoHistorial.ValorFinal = registroFinal.Valor;
-            nuevoHistorial.ValorMayor = registroMayor.Valor;
-            nuevoHistorial.ValorMenor = registrosMenor.Valor;
-            nuevoHistorial.ValorMitad = registroMitad.Valor;
-            nuevoHistorial.ValorUnCuarto = registro1Cuarto.Valor;
-            nuevoHistorial.ValorTresCuartos = registro3Cuartos.Valor;
-
-            DateTime fecha = nuevoHistorial.HoraInicio;
-            Auto auto = db.Autos.Where(a => a.Id == id).FirstOrDefault();
-            List<HistorialDiario> historiales = auto.HistorialesDiarios.ToList();
-            historiales.Reverse();
-
-            DateTime fechaHoy = DateTime.Today;
-            HistorialDiario historialHoy = historiales.Where(h => h.Fecha.Year == fechaHoy.Year
-                                                                && h.Fecha.Month == fechaHoy.Month
-                                                                && h.Fecha.Day == fechaHoy.Day).FirstOrDefault();
-
-            if (historialHoy == null)
-            {
-                historialHoy = new HistorialDiario()
-                {
-                    Fecha = fechaHoy,
-                    historialesEnergia = new List<HistorialEnergia>(),
-                    historialesPosicion = new List<HistorialPosicion>(),
-                    historialesVelocidad = new List<HistorialVelocidad>()
-                };
-                auto.HistorialesDiarios.Add(historialHoy);
-            }
-
-            historialHoy.historialesVelocidad.Add(nuevoHistorial);
-            db.SaveChanges();
-
-            return Ok();
         }
+
+
 
         //POST: odata/Autos/ActualizarEnergia
         //Parametros: Id,HoraRegistro,ValorInicio,HoraInicio,ValorFinal,HoraFinal,ValorMenor,HoraMenor,ValorMayor,HoraMayor,ValorMitad,HoraMitad
@@ -322,45 +372,53 @@ namespace AEOnline.Controllers
 
         }
 
-        //POST: odata/Autos/ActualizarPosicionLista
+
+        //POST: odata/Autos/ActualizarPosicionListaDX
         //Parametros: Id,ListaPosiciones
-        //(FechaHora,Latitud,Longitud)
-        public IHttpActionResult ActualizarPosicionLista(ODataActionParameters parameters)
+        //(FechaHora,MetrosTramo,Latitud,Longitud,Inicio)
+        public string ActualizarPosicionListaDX(ODataActionParameters parameters)
         {
             if (parameters == null)
-                return BadRequest();
+                return "Error";
 
             int id = (int)parameters["Id"];
             var posiciones = parameters["ListaPosiciones"] as IEnumerable<Posicion>;
             List<Posicion> listaPosiciones = posiciones.ToList();
             List<HistorialPosicion> hisPosicion = new List<HistorialPosicion>();
 
+            Auto auto = db.Autos.Where(a => a.Id == id).FirstOrDefault();
+            if (auto == null)
+                return "Error";
+
             for (int i = 0; i < listaPosiciones.Count; i++)
             {
                 double latitud = listaPosiciones[i].Latitud;
                 double longitud = listaPosiciones[i].Longitud;
                 string horaString = listaPosiciones[i].FechaHora;
+                float distanciaTramo = listaPosiciones[i].MetrosTramo;
+                bool inicio = listaPosiciones[i].Inicio;
 
                 DateTime horaRegistro;
                 bool result = DateTime.TryParseExact(horaString,
                          FormatoFecha.formato, FormatoFecha.provider, DateTimeStyles.None, out horaRegistro);
 
                 if (result == false)
-                    return BadRequest();
+                    return "Error";
 
                 HistorialPosicion hp = new HistorialPosicion();
                 hp.FechaHora = horaRegistro;
                 hp.Latitud = latitud;
                 hp.Longitud = longitud;
+                hp.MetrosTramo = distanciaTramo;
+                hp.Inicio = inicio;
 
                 hisPosicion.Add(hp);
             }
 
             if (hisPosicion.Count == 0)
-                return BadRequest();
+                return "Error";
 
-            DateTime fecha = hisPosicion[0].FechaHora;
-            Auto auto = db.Autos.Where(a => a.Id == id).FirstOrDefault();
+
             List<HistorialDiario> historiales = auto.HistorialesDiarios.ToList();
             historiales.Reverse();
 
@@ -382,20 +440,279 @@ namespace AEOnline.Controllers
                 auto.HistorialesDiarios.Add(historialHoy);
             }
 
-
-            for (int i = 0; i < hisPosicion.Count; i++)
+            //------SE FILTRAN LOS HISTORIALES OBTENIDOS--------------
+            //A partir del primer punto, solo se agregan un punto siguiente si supera los 25 metros del filtro
+            #region TEST METROS POR TRAMO
+            List<double> metrosTramos = new List<double>();
+            for (int i = 0; i < hisPosicion.Count - 1; i++)
             {
-                historialHoy.historialesPosicion.Add(hisPosicion[i]);
+                var sCoord = new GeoCoordinate(hisPosicion[i].Latitud, hisPosicion[i].Longitud);
+                var eCoord = new GeoCoordinate(hisPosicion[i + 1].Latitud, hisPosicion[i + 1].Longitud);
+
+                metrosTramos.Add(sCoord.GetDistanceTo(eCoord));
             }
 
-            HistorialPosicion ultimaPosicion = hisPosicion[hisPosicion.Count - 1];
+            #endregion
+
+
+            int metrosFiltro = 25;
+            List<HistorialPosicion> filtro = new List<HistorialPosicion>();
+            filtro.Add(hisPosicion[0]);
+
+            int indexOrigen = 0;
+            for (int i = 0; i < hisPosicion.Count; i++)
+            {
+                if (i > indexOrigen)
+                {
+                    var sCoord = new GeoCoordinate(hisPosicion[indexOrigen].Latitud, hisPosicion[indexOrigen].Longitud);
+                    //a partir del index de origen se busca el primer punto a distancia mayor de 25 metros
+                    //el index de ese punto se convierte en el indexorigen
+                    for (int y = (indexOrigen + 1); y < hisPosicion.Count; y++)
+                    {
+                        var eCoord = new GeoCoordinate(hisPosicion[y].Latitud, hisPosicion[y].Longitud);
+                        double metrosDistancia = sCoord.GetDistanceTo(eCoord);
+
+                        if(metrosDistancia > metrosFiltro)
+                        {
+                            filtro.Add(hisPosicion[y]);
+                            indexOrigen = y;
+                            break;
+                        }
+                    }
+                }
+
+            }
+
+            for (int i = 0; i < filtro.Count; i++)
+            {
+                historialHoy.historialesPosicion.Add(filtro[i]);
+            }
+
+            HistorialPosicion ultimaPosicion = filtro[filtro.Count - 1];
             auto.Latitud = ultimaPosicion.Latitud;
             auto.Longitud = ultimaPosicion.Longitud;
             db.SaveChanges();
 
-            return Ok();
+            return "Ok";
         }
 
+        //POST: odata/Autos/ActualizarPosicionListaDXZ
+        //Parametros: Id,ListaPosiciones
+        //(FechaHora,MetrosTramo,Latitud,Longitud,Inicio)
+        public string ActualizarPosicionListaDXZ(ODataActionParameters parameters)
+        {
+            if (parameters == null)
+                return "Error";
+            try
+            {
+                int id = (int)parameters["Id"];
+                var posiciones = parameters["ListaPosiciones"] as IEnumerable<Posicion>;
+                List<Posicion> listaPosiciones = posiciones.ToList();
+                List<HistorialPosicion> hisPosicion = new List<HistorialPosicion>();
+
+                Auto auto = db.Autos.Where(a => a.Id == id).FirstOrDefault();
+                if (auto == null)
+                    return "Error";
+
+                for (int i = 0; i < listaPosiciones.Count; i++)
+                {
+                    double latitud = listaPosiciones[i].Latitud;
+                    double longitud = listaPosiciones[i].Longitud;
+                    string horaString = listaPosiciones[i].FechaHora;
+                    float distanciaTramo = listaPosiciones[i].MetrosTramo;
+                    bool inicio = listaPosiciones[i].Inicio;
+
+                    DateTime horaRegistro;
+                    bool result = DateTime.TryParseExact(horaString,
+                             FormatoFecha.formato, FormatoFecha.provider, DateTimeStyles.None, out horaRegistro);
+
+                    if (result == false)
+                        return "Error";
+
+                    HistorialPosicion hp = new HistorialPosicion();
+                    hp.FechaHora = horaRegistro;
+                    hp.Latitud = latitud;
+                    hp.Longitud = longitud;
+                    hp.MetrosTramo = distanciaTramo;
+                    hp.Inicio = inicio;
+
+                    hp.NombreCalle = "";
+                    hp.NombreLocalidad = "";
+                    hp.GPSOffBool = false;
+
+                    hisPosicion.Add(hp);
+                }
+
+                if (hisPosicion.Count == 0)
+                    return "Error";
+
+                hisPosicion = hisPosicion.OrderBy(h => h.FechaHora).ToList();
+
+                List<HistorialDiario> HistDiarioEnRango = CrearHistorialesDiariosEnRango(hisPosicion.First().FechaHora, hisPosicion.Last().FechaHora, auto);
+
+                //------SE FILTRAN LOS HISTORIALES OBTENIDOS--------------
+                //A partir del primer punto, solo se agregan un punto siguiente si supera los 25 metros del filtro
+
+
+                int metrosFiltro = 25;
+                List<HistorialPosicion> filtro = new List<HistorialPosicion>();
+                filtro.Add(hisPosicion[0]);
+
+                int indexOrigen = 0;
+                for (int i = 0; i < hisPosicion.Count; i++)
+                {
+                    if (i > indexOrigen)
+                    {
+                        var sCoord = new GeoCoordinate(hisPosicion[indexOrigen].Latitud, hisPosicion[indexOrigen].Longitud);
+                        //a partir del index de origen se busca el primer punto a distancia mayor de 25 metros
+                        //el index de ese punto se convierte en el indexorigen
+                        for (int y = (indexOrigen + 1); y < hisPosicion.Count; y++)
+                        {
+                            var eCoord = new GeoCoordinate(hisPosicion[y].Latitud, hisPosicion[y].Longitud);
+                            double metrosDistancia = sCoord.GetDistanceTo(eCoord);
+
+                            if (metrosDistancia > metrosFiltro)
+                            {
+                                filtro.Add(hisPosicion[y]);
+                                indexOrigen = y;
+                                break;
+                            }
+                        }
+                    }
+
+                }
+
+                for (int i = 0; i < filtro.Count; i++)
+                {
+                    HistorialDiario histCorrespondiente = HistDiarioEnRango.Where(h => h.Fecha.Year == filtro[i].FechaHora.Year
+                                                                   && h.Fecha.Month == filtro[i].FechaHora.Month
+                                                                   && h.Fecha.Day == filtro[i].FechaHora.Day).FirstOrDefault();
+                    histCorrespondiente.historialesPosicion.Add(filtro[i]);
+                }
+
+                HistorialPosicion ultimaPosicion = filtro[filtro.Count - 1];
+                auto.Latitud = ultimaPosicion.Latitud;
+                auto.Longitud = ultimaPosicion.Longitud;
+                db.SaveChanges();
+
+                return "Ok";
+            }
+            catch
+            {
+                return "CatchWebService";
+            }
+        }
+
+
+        //POST: odata/Autos/ActualizarPosicionListaDXZGPS
+        //Parametros: Id,ListaPosiciones
+        //(FechaHora,MetrosTramo,Latitud,Longitud,Inicio)
+        public string ActualizarPosicionListaDXZGPS(ODataActionParameters parameters)
+        {
+            if (parameters == null)
+                return "Error";
+            try
+            {
+                int id = (int)parameters["Id"];
+                var posiciones = parameters["ListaPosiciones"] as IEnumerable<Posicion>;
+                List<Posicion> listaPosiciones = posiciones.ToList();
+                List<HistorialPosicion> hisPosicion = new List<HistorialPosicion>();
+
+                Auto auto = db.Autos.Where(a => a.Id == id).FirstOrDefault();
+                if (auto == null)
+                    return "Error";
+
+                for (int i = 0; i < listaPosiciones.Count; i++)
+                {
+                    double latitud = listaPosiciones[i].Latitud;
+                    double longitud = listaPosiciones[i].Longitud;
+                    string horaString = listaPosiciones[i].FechaHora;
+                    float distanciaTramo = listaPosiciones[i].MetrosTramo;
+                    bool inicio = listaPosiciones[i].Inicio;
+                    bool gpsOff = listaPosiciones[i].GPSOffBool;
+
+                    DateTime horaRegistro;
+                    bool result = DateTime.TryParseExact(horaString,
+                             FormatoFecha.formato, FormatoFecha.provider, DateTimeStyles.None, out horaRegistro);
+
+                    if (result == false)
+                        return "Error";
+
+                    HistorialPosicion hp = new HistorialPosicion();
+                    hp.FechaHora = horaRegistro;
+                    hp.Latitud = latitud;
+                    hp.Longitud = longitud;
+                    hp.MetrosTramo = distanciaTramo;
+                    hp.Inicio = inicio;
+
+                    hp.NombreCalle = "";
+                    hp.NombreLocalidad = "";
+                    hp.GPSOffBool = gpsOff;
+
+                    hisPosicion.Add(hp);
+                }
+
+                if (hisPosicion.Count == 0)
+                    return "Error";
+
+                hisPosicion = hisPosicion.OrderBy(h => h.FechaHora).ToList();
+
+                List<HistorialDiario> HistDiarioEnRango = CrearHistorialesDiariosEnRango(hisPosicion.First().FechaHora, hisPosicion.Last().FechaHora, auto);
+
+                //------SE FILTRAN LOS HISTORIALES OBTENIDOS--------------
+                //A partir del primer punto, solo se agregan un punto siguiente si supera los 25 metros del filtro
+
+
+                int metrosFiltro = 25;
+                List<HistorialPosicion> filtro = new List<HistorialPosicion>();
+                filtro.Add(hisPosicion[0]);
+
+                int indexOrigen = 0;
+                for (int i = 0; i < hisPosicion.Count; i++)
+                {
+                    if (i > indexOrigen)
+                    {
+                        var sCoord = new GeoCoordinate(hisPosicion[indexOrigen].Latitud, hisPosicion[indexOrigen].Longitud);
+                        //a partir del index de origen se busca el primer punto a distancia mayor de 25 metros
+                        //el index de ese punto se convierte en el indexorigen
+                        for (int y = (indexOrigen + 1); y < hisPosicion.Count; y++)
+                        {
+                            var eCoord = new GeoCoordinate(hisPosicion[y].Latitud, hisPosicion[y].Longitud);
+                            double metrosDistancia = sCoord.GetDistanceTo(eCoord);
+
+                            if (metrosDistancia > metrosFiltro)
+                            {
+                                filtro.Add(hisPosicion[y]);
+                                indexOrigen = y;
+                                break;
+                            }
+                        }
+                    }
+
+                }
+
+                for (int i = 0; i < filtro.Count; i++)
+                {
+                    HistorialDiario histCorrespondiente = HistDiarioEnRango.Where(h => h.Fecha.Year == filtro[i].FechaHora.Year
+                                                                   && h.Fecha.Month == filtro[i].FechaHora.Month
+                                                                   && h.Fecha.Day == filtro[i].FechaHora.Day).FirstOrDefault();
+                    histCorrespondiente.historialesPosicion.Add(filtro[i]);
+                }
+
+                HistorialPosicion ultimaPosicion = filtro[filtro.Count - 1];
+                auto.Latitud = ultimaPosicion.Latitud;
+                auto.Longitud = ultimaPosicion.Longitud;
+                db.SaveChanges();
+
+                return "Ok";
+            }
+            catch
+            {
+                return "CatchWebService";
+            }
+        }
+
+        #region Obtener Datos para tablet
 
         //POST: odata/Autos/ObtenerHistorialesVelocidad
         //Parametros: Id,Fecha
@@ -451,6 +768,50 @@ namespace AEOnline.Controllers
             List<HistorialPosicion> historialFiltrado = db.HistorialesPosicion.Where(h => h.FechaHora >= fechaInicio && h.FechaHora <= fechaFinal).ToList();
 
             return historialFiltrado;
+        }
+
+        #endregion
+
+
+        public List<HistorialDiario> CrearHistorialesDiariosEnRango(DateTime _inicio, DateTime _final, Auto _auto)
+        {
+            //se revisan si hay un historialdiario para cada una de las fechas entre esos 2 limites
+            //Se crean de ser necesario
+
+            //deberia haber un db.savechanges
+            //se retorna la lista de historialesdiarios junto a los recien creados
+
+            List<HistorialDiario> historiales = _auto.HistorialesDiarios.ToList();
+            int diasDiferencia = Convert.ToInt32((_final.Date - _inicio.Date).TotalDays);
+
+            List<HistorialDiario> resultado = new List<HistorialDiario>();
+
+            for (int i = 0; i <= diasDiferencia; i++)
+            {
+                DateTime fecha = _inicio.Date + new TimeSpan(i,0,0,0,0);
+
+                HistorialDiario historialHoy = historiales.Where(h => h.Fecha.Year == fecha.Year
+                                                               && h.Fecha.Month == fecha.Month
+                                                               && h.Fecha.Day == fecha.Day).FirstOrDefault();
+                if (historialHoy == null)
+                {
+                    historialHoy = new HistorialDiario()
+                    {
+                        //Fecha = hisPosicion[hisPosicion.Count -1].FechaHora.Date,
+                        Fecha = fecha,
+                        historialesEnergia = new List<HistorialEnergia>(),
+                        historialesPosicion = new List<HistorialPosicion>(),
+                        historialesVelocidad = new List<HistorialVelocidad>()
+                    };
+                    _auto.HistorialesDiarios.Add(historialHoy);
+                }
+
+                resultado.Add(historialHoy);
+
+            }
+
+            db.SaveChanges();
+            return resultado;
         }
 
 

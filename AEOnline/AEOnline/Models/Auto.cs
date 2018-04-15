@@ -41,6 +41,8 @@ namespace AEOnline.Models
         [ForeignKey("OperadorId")]
         public virtual Operador Operador { get; set; }
 
+        public bool Atajo { get; set; }
+
         #region HistorialGeneral
 
         public float LitrosTotalesConsumidos { get; set; }
@@ -84,7 +86,8 @@ namespace AEOnline.Models
                 {
                     Operador operador = flota.Operadores.Where(o => o.Id == _idOperador).FirstOrDefault();
                     nuevoAuto.Operador = operador;
-                    operador.Auto = nuevoAuto;
+                    //operador.Auto = nuevoAuto;
+                    operador.Autos.Add(nuevoAuto);
                 }
             }
             _db.SaveChanges();
@@ -114,15 +117,21 @@ namespace AEOnline.Models
 
             if(_idNuevoOperador == 0)
             {
-                if(flota!= null && autoOriginal.OperadorId != null)
-                    autoOriginal.Operador.Auto = null;
+                if (flota != null && autoOriginal.OperadorId != null)
+                    autoOriginal.Operador.Autos.Clear();
+                   // autoOriginal.Operador.Auto = null;
 
                 autoOriginal.Operador = null;
             }
             if(flota != null && _idNuevoOperador != 0)
             {
+                if (autoOriginal.OperadorId != null)
+                    autoOriginal.Operador.Autos.Clear();
+                    //autoOriginal.Operador.Auto = null;
+
                 Operador operador = flota.Operadores.Where(o => o.Id == _idNuevoOperador).FirstOrDefault();
-                operador.Auto = autoOriginal;
+                //operador.Auto = autoOriginal;
+                operador.Autos.Add(autoOriginal);
                 autoOriginal.Operador = operador;
 
             }
@@ -147,7 +156,8 @@ namespace AEOnline.Models
             Auto auto = _db.Autos.Where(a => a.Id == _idAuto).FirstOrDefault();
 
             if (auto.OperadorId != null)
-                auto.Operador.Auto = null;
+                auto.Operador.Autos.Clear();
+                //auto.Operador.Auto = null;
 
             _db.HistorialesCargaCombustible.RemoveRange(auto.CargasCombustible);
 

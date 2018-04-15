@@ -25,7 +25,12 @@ namespace AEOnline.Models
         public int CostoTotal { get; set; }
         public int Kilometraje { get; set; }
         public virtual Proveedor Proveedor { get; set; }
+        public virtual Operador Operador { get; set; }
 
+        public string RutEstacion { get; set; }
+        public int NumeroDeBoleta { get; set; }
+
+        public DateTime FechaCreacion { get; set; }
 
         //Mostrables en la tabla
         public float KilometrosRecorridos { get; set; }
@@ -35,7 +40,8 @@ namespace AEOnline.Models
 
         public static void NuevaCargaCombustible(ProyectoAutoContext _db, int _idAuto, 
             DateTime _fecha, DateTime _hora, bool _estanqueLleno, 
-            float _cantidadLitros, int _costoUnitario, int _Kilometraje, Proveedor _proveedor)
+            float _cantidadLitros, int _costoUnitario, int _Kilometraje, Proveedor _proveedor,
+            string _rut, int _nBoleta)
         {
             Auto auto = _db.Autos.Where(a => a.Id == _idAuto).FirstOrDefault();
             List<HistorialCargaCombustible> otrasCargas = auto.CargasCombustible.OrderBy(h => h.FechaHora).ToList();
@@ -71,6 +77,10 @@ namespace AEOnline.Models
             float costoPorKilometro = -1;
             float rendimiento = -1;
 
+            Operador operador = null;
+            if (auto.OperadorId != null)
+                operador = auto.Operador;
+
 
             if (otrasCargas.Count > 0)
             {
@@ -91,11 +101,13 @@ namespace AEOnline.Models
             nuevaCarga.Kilometraje = _Kilometraje;
             nuevaCarga.CostoTotal = costoTotal;
             nuevaCarga.Proveedor = _proveedor;
+            nuevaCarga.Operador = operador;
+            nuevaCarga.RutEstacion = _rut;
+            nuevaCarga.NumeroDeBoleta = _nBoleta;
 
             nuevaCarga.KilometrosRecorridos = kilometrosRecorridos;
             nuevaCarga.CostoPorKilometro = costoPorKilometro;
             nuevaCarga.Rendimiento = rendimiento;
-
             auto.CargasCombustible.Add(nuevaCarga);
 
 
@@ -105,7 +117,8 @@ namespace AEOnline.Models
 
         public static void EditarCargaCombustible(ProyectoAutoContext _db, int _idAuto, int _idCargaOriginal,
             DateTime _fecha, DateTime _hora, bool _estanqueLleno,
-            float _cantidadLitros, int _costoUnitario, int _Kilometraje, Proveedor _proveedor)
+            float _cantidadLitros, int _costoUnitario, int _Kilometraje, Proveedor _proveedor,
+            string _rut, int _nBoleta)
         {
             //considerar edicion de historial general del auto y el proveedor
             // editar tambien kilometros recorridos, costo por kilometro, rendimiento DE ESTE Y EL SIGUIENTE HISTORIAL
@@ -165,6 +178,8 @@ namespace AEOnline.Models
             cargaOriginal.Kilometraje = _Kilometraje;
             cargaOriginal.CostoTotal = costoTotal;
             cargaOriginal.Proveedor = _proveedor;
+            cargaOriginal.RutEstacion = _rut;
+            cargaOriginal.NumeroDeBoleta = _nBoleta;
 
             cargaOriginal.KilometrosRecorridos = kilometrosRecorridos;
             cargaOriginal.CostoPorKilometro = costoPorKilometro;

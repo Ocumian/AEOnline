@@ -1,0 +1,37 @@
+﻿
+@{
+    ViewBag.Title = "AcercaDe";
+
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    string rol = "";
+
+    if (Session["Rol"] != null)
+    {
+        rol += Session["Rol"].ToString();
+    }
+
+    if (rol == "SuperAdmin")
+    {
+        Response.Redirect("~/SuperAdmin/Index");
+    }
+    if (rol == "AdminDeFlota")
+    {
+        Response.Redirect("~/AdminFlota2/Index");
+    }
+    if (rol == "Normal")
+    {
+        Response.Redirect("~/UserNormal/Index");
+    }
+}
+
+<h2>Acerca de esta aplicación</h2>
+
+<strong>Versión:</strong><br />
+v1.1.0.7<br />
+
+<br />
+<strong> Autores:</strong> <br />
+Oscar Cumian <br />
+Richard Mancilla <br />
+

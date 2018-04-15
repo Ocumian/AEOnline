@@ -27,7 +27,8 @@ namespace AEOnline.Models
         public string TipoLicencia { get; set; }
 
         public virtual Usuario Usuario { get; set; }
-        public virtual Auto Auto { get; set; }
+        //public virtual Auto Auto { get; set; }
+        public virtual List<Auto> Autos { get; set; }
 
 
         public static void CrearOperador(ProyectoAutoContext _db, int _idFlota, 
@@ -47,7 +48,10 @@ namespace AEOnline.Models
 
             if(auto != null)
             {
-                nuevoOperador.Auto = auto;
+                //nuevoOperador.Auto = auto;
+                nuevoOperador.Autos = new List<Auto>();
+                nuevoOperador.Autos.Add(auto);
+
                 auto.Operador = nuevoOperador;
             }
 
@@ -70,19 +74,35 @@ namespace AEOnline.Models
 
             if(_idNuevoAuto == 0)
             {
-                if(operador.Auto != null)
+                //if(operador.Auto != null)
+                //{
+                //    operador.Auto.Operador = null;
+                //    operador.Auto = null;
+                //}
+
+                if(operador.Autos.Count > 0)
                 {
-                    operador.Auto.Operador = null;
-                    operador.Auto = null;
+                    operador.Autos.First().Operador = null;
+                    operador.Autos.Clear();
                 }
             }
             else
             {
-                if (operador.Auto != null)
-                    operador.Auto.Operador = null;
+                //if (operador.Auto != null)
+                //    operador.Auto.Operador = null;
 
+                //Auto autoNuevo = flota.Autos.Where(a => a.Id == _idNuevoAuto).FirstOrDefault();
+                //operador.Auto = autoNuevo;
+                //autoNuevo.Operador = operador;
+
+                if (operador.Autos.Count > 0)
+                {
+                    operador.Autos.First().Operador = null;
+                    operador.Autos.Clear();
+                }
+                    
                 Auto autoNuevo = flota.Autos.Where(a => a.Id == _idNuevoAuto).FirstOrDefault();
-                operador.Auto = autoNuevo;
+                operador.Autos.Add(autoNuevo);
                 autoNuevo.Operador = operador;
             }
 
@@ -112,10 +132,17 @@ namespace AEOnline.Models
         {
             Operador operador = _db.Operadores.Where(o => o.Id == _idOperador).FirstOrDefault();
 
-            if (operador.Auto != null)
-                operador.Auto.Operador = null;
+            if (operador.Autos.Count > 0)
+            {
+                operador.Autos.First().Operador = null;
+                operador.Autos.Clear();
+            }
+            //if (operador.Auto != null)
+            //    operador.Auto.Operador = null;
             if (operador.Usuario != null)
                 operador.Usuario.Operador = null;
+
+
 
             _db.Operadores.Remove(operador);
             _db.SaveChanges();

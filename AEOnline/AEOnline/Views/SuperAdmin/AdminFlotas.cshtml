@@ -31,6 +31,9 @@
             Administrador
         </th>
         <th>
+            Pack de servicio
+        </th>
+        <th>
             Operadores
         </th>
         <th>
@@ -42,32 +45,43 @@
 
     @foreach (var item in Model)
     {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Nombre)
-            </td>
-            <td>
-                @{
-                    string nAdmin = "-";
+    <tr>
+        <td>
+            @Html.DisplayFor(modelItem => item.Nombre)
+        </td>
+        <td>
+            @{
+            string nAdmin = "-";
 
-                    if (item.UsuarioFlotaId != null)
-                    {
-                        nAdmin = item.UsuarioFlota.Usuario.Nombre;                   
-                    }
+            if (item.UsuarioFlotaId != null)
+            {
+                nAdmin = item.UsuarioFlota.Usuario.Nombre;
+            }
+            }
+            @nAdmin
+        </td>
+        <td>
+            @{
+                string npack = "-";
+
+                if (item.PackId != null)
+                {
+                    npack = item.PackServicio.Nombre;
                 }
-                @nAdmin
-            </td>
-            <td>
-                @Html.ActionLink("Ver Operadores", "OperadoresFlota", new { id = item.Id })
-            </td>
-            <td>
-                @Html.ActionLink("Ver Autos", "AutosFlota", new { id = item.Id })
-            </td>
-            <td>
-                @Html.ActionLink("Editar Datos", "EditarFlota", new { id = item.Id })<br />
-                @Html.ActionLink("Eliminar", "EliminarFlota", new {id = item.Id})
-            </td>
-        </tr>
+            }
+            @npack
+        </td>
+        <td>
+            @Html.ActionLink("Ver Operadores", "OperadoresFlota", new { id = item.Id })
+        </td>
+        <td>
+            @Html.ActionLink("Ver Autos", "AutosFlota", new { id = item.Id })
+        </td>
+        <td>
+            @Html.ActionLink("Editar Datos", "EditarFlota", new { id = item.Id })<br />
+            @Html.ActionLink("Eliminar", "EliminarFlota", new { id = item.Id })
+        </td>
+    </tr>
      }
 
 </table>

@@ -3,6 +3,7 @@ using AEOnline.Models;
 using AEOnline.Models.WebModels;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Web;
@@ -140,9 +141,39 @@ namespace AEOnline.Controllers.web
         }
 
 
+        void ReparacionBaseDeDatos()
+        {
+            List<Auto> autos = db.Autos.ToList();
+            List<Usuario> usuarios = db.Usuarios.ToList();
+
+            foreach(Auto a in autos)
+            {
+                if(a.Operador != null)
+                {
+                    a.OperadorId = a.Operador.Id;
+
+                    a.Operador.Autos.Clear();
+                    a.Operador.Autos.Add(a);
+
+                }
+            }
+            foreach(Usuario u in usuarios)
+            {
+                if(u.Operador != null)
+                {
+                    u.OperadorId = u.Operador.Id;
+                    u.Operador.Usuario = u;
+                }
+            }
+
+            db.SaveChanges();
+        }
+
+
         // GET: SuperAdmin
         public ActionResult Index()
         {
+            //ReparacionBaseDeDatos();
             return View();
         }
 
@@ -221,12 +252,33 @@ namespace AEOnline.Controllers.web
         [ValidateAntiForgeryToken]
         public ActionResult CrearUsuario([Bind(Include = "Id,Nombre,Rol,Password,ConfirmPassword,Email,AutoPatente,FlotaNombre,FlotaId")] CreacionUsuario model)
         {
+            string pass = "";
+            string confirmpass = "";
+
+            if (model.Password != null)
+                pass = model.Password.Trim();
+            if (model.ConfirmPassword != null)
+                confirmpass = model.ConfirmPassword.Trim();
+
+            if (pass == "" || confirmpass == "")
+            {
+                ModelState.Clear();
+                if (pass == "")
+                    ModelState.AddModelError("Password", "Campo password es obligatorio.");
+                if (confirmpass == "")
+                    ModelState.AddModelError("ConfirmPassword", "Campo confirmar password es obligatorio.");
+
+                TryValidateModel(model);
+            }
+
             if (ModelState.IsValid == false)
             {
                 RellenarFlotasSinAdmin();
                 ViewBag.FlotaId = new SelectList(flotas, "Id", "Nombre");
                 return View("CrearUsuario", model);
             }
+
+
 
             bool repetido = Usuario.VerificarRepetido(model.Email);
 
@@ -288,13 +340,16 @@ namespace AEOnline.Controllers.web
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult EditarUsuario([Bind(Include = "Id,Nombre,Rol,Email,AutoPatente,FlotaNombre,FlotaId")] CreacionUsuario model)
+        public ActionResult EditarUsuario([Bind(Include = "Id,Nombre,Rol,Email,AutoPatente,Password,ConfirmPassword,FlotaNombre,FlotaId")] CreacionUsuario model)
         {
-            model.Password = ".";
-            model.ConfirmPassword = ".";
+            string pass = "";
+            string confirmpass = "";
 
-            ModelState.Clear();
-            TryValidateModel(model);
+            if (model.Password != null)
+                pass = model.Password.Trim();
+            if (model.ConfirmPassword != null)
+                confirmpass = model.ConfirmPassword.Trim();
+
 
             if (ModelState.IsValid == false)
             {
@@ -333,6 +388,8 @@ namespace AEOnline.Controllers.web
 
 
             Usuario.EditarUsuario(db, userOriginal.Id, model.Nombre, model.Email, model.Rol, model.FlotaId);
+
+            Usuario.EditarPasswordUsuario(db, userOriginal.Id, pass);
 
             return RedirectToAction("AdminUsuarios");
 
@@ -497,6 +554,111 @@ namespace AEOnline.Controllers.web
             return RedirectToAction("AdminAutos");
         }
 
+        public ActionResult RegistrosCelular(int? id, int? tipo) //tipo 0: chofer, tipo 1: auto
+        {
+
+            if (id == null || tipo == null)
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+
+            Auto auto = null;
+
+            if (tipo == 0)
+            {
+                Operador operador = db.Operadores.Where(o => o.Id == id).FirstOrDefault();
+
+                if (operador == null)
+                    return HttpNotFound();
+
+                //if (operador.Auto != null)
+                //    auto = operador.Auto;
+
+                if (operador.Autos.Count > 0)
+                    auto = operador.Autos.First();
+            }
+            else if (tipo == 1)
+            {
+                auto = db.Autos.Where(u => u.Id == id).FirstOrDefault();
+            }
+
+
+            if (auto == null)
+                return HttpNotFound();
+
+
+            //SelectList tiposHistorial = new SelectList(HistorialWeb.ObtenerTiposHistorial());
+            //ViewBag.MyType = tiposHistorial;
+
+            CreacionUsuario cu = new CreacionUsuario()
+            {
+                Fecha = DateTime.Today,
+                AutoPatente = auto.Patente,
+                AutoId = auto.Id,
+                AutoNombre = auto.NombreVehiculo
+            };
+
+            return View(cu);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult RegistrosCelular(HistorialWeb.TiposHistorial? MyType, string Fecha, int AutoId)
+        {
+            string fechaString = Fecha;
+            fechaString = fechaString.Replace('-', '/');
+            fechaString += " 00:00:00";
+
+            DateTime fechaSeleccionada;
+            bool result = DateTime.TryParseExact(fechaString, FormatoFecha.formato, FormatoFecha.provider, DateTimeStyles.None, out fechaSeleccionada);
+
+            #region Modelo Usado en vista principal
+
+            Auto auto = db.Autos.Where(a => a.Id == AutoId).FirstOrDefault();
+
+            CreacionUsuario us = new CreacionUsuario();
+            us.Fecha = fechaSeleccionada;
+            us.AutoPatente = auto.Patente;
+            us.AutoId = auto.Id;
+            us.AutoNombre = auto.NombreVehiculo;
+
+            SelectList tiposHistorial = new SelectList(HistorialWeb.ObtenerTiposHistorial());
+            ViewBag.MyType = tiposHistorial;
+            ViewBag.HistorialSeleccionado = MyType.ToString();
+            ViewBag.FechaSeleccionada = Fecha;
+
+            #endregion
+
+
+            //Modelo historial va al viewbag que se envía a la vista parcial
+            HistorialWeb historialWeb = new HistorialWeb();
+            historialWeb.FechaMostrar = fechaSeleccionada;
+            historialWeb.PatenteAuto = auto.Patente;
+            historialWeb.IdAuto = auto.Id;
+
+            if (MyType == HistorialWeb.TiposHistorial.Velocidad)
+            {
+                historialWeb = HistorialesManager.PrepararHistorialVelocidad(db, historialWeb, fechaSeleccionada, us.AutoId);
+
+                //Viewbag enviado a la vista parcial
+                ViewBag.HistorialWeb = historialWeb;
+            }
+            else if (MyType == HistorialWeb.TiposHistorial.Posicion)
+            {
+                historialWeb = HistorialesManager.PrepararHistorialPosicion(db, historialWeb, fechaSeleccionada, us.AutoId);
+
+                //Viewbag enviado a la vista parcial
+                ViewBag.HistorialWeb = historialWeb;
+            }
+            else if (MyType == HistorialWeb.TiposHistorial.Energia)
+            {
+                historialWeb = HistorialesManager.PrepararHistorialEnergia(db, historialWeb, fechaSeleccionada, us.AutoId);
+
+                //Viewbag enviado a la vista parcial
+                ViewBag.HistorialWeb = historialWeb;
+            }
+
+            return View(us);
+        }
+
         #endregion
 
         #region ------------ADMINISTRACION DE FLOTAS---------------
@@ -562,7 +724,8 @@ namespace AEOnline.Controllers.web
                 Id = flota.Id,
                 Nombre = flota.Nombre,
                 AdminNombre = "",
-                AdminId = 0
+                AdminId = 0,
+                PackServicioId = 0
             };
 
             if (flota.UsuarioFlotaId != null)
@@ -571,23 +734,33 @@ namespace AEOnline.Controllers.web
                 modeloFlota.AdminId = flota.UsuarioFlota.Usuario.Id;
             }
                
+            if(flota.PackId != null)
+            {
+                modeloFlota.PackServicioId = flota.PackServicio.Id;
+            }
 
             RellenarAdminsSinFlota(modeloFlota.AdminId);
             SelectList selectAdmins = new SelectList(adminFlotas, "Id", "Nombre", modeloFlota.AdminId);
+            SelectList packs = new SelectList(db.PackServicios.ToList(), "Id", "Nombre", modeloFlota.PackServicioId);
+
             ViewBag.AdminId = selectAdmins;
+            ViewBag.PackServicioId = packs;
 
             return View(modeloFlota);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult EditarFlota([Bind(Include = "Id,Nombre,AdminNombre,AdminId")] CreacionFlota model)
+        public ActionResult EditarFlota([Bind(Include = "Id,Nombre,AdminNombre,PackServicioId,AdminId,")] CreacionFlota model)
         {
             if (ModelState.IsValid == false)
             {
                 RellenarAdminsSinFlota(model.AdminId);
                 SelectList selectAdmins = new SelectList(adminFlotas, "Id", "Nombre", model.AdminId);
+                SelectList packs = new SelectList(db.PackServicios.ToList(), "Id", "Nombre", model.PackServicioId);
+
                 ViewBag.AdminId = selectAdmins;
+                ViewBag.PackServicioId = packs;
                 return View("EditarFlota", model);
             }
 
@@ -600,12 +773,14 @@ namespace AEOnline.Controllers.web
 
                 RellenarAdminsSinFlota(model.AdminId);
                 SelectList selectAdmins = new SelectList(adminFlotas, "Id", "Nombre", model.AdminId);
+                SelectList packs = new SelectList(db.PackServicios.ToList(), "Id", "Nombre", model.PackServicioId);
+
                 ViewBag.AdminId = selectAdmins;
+                ViewBag.PackServicioId = packs;
                 return View("EditarFlota", model);
             }
 
-
-            Flota.EditarFlota(db, flotaOriginal.Id, model.Nombre, model.AdminId);
+            Flota.EditarFlota(db, flotaOriginal.Id, model.Nombre, model.AdminId,model.PackServicioId);
 
             return RedirectToAction("AdminFlotas");
         }
@@ -758,10 +933,16 @@ namespace AEOnline.Controllers.web
             usuariosCandidatos.Add(new Usuario() { Id = 0, Email = "No asignar" });
             usuariosCandidatos.Reverse();
 
-            if (operador.Auto != null)
+            //if (operador.Auto != null)
+            //{
+            //    modeloOperador.AutoId = operador.Auto.Id;
+            //    Auto autoActual = flota.Autos.Where(a => a.Id == operador.Auto.Id).FirstOrDefault();
+            //    autosCandidatos.Add(autoActual);
+            //}
+            if (operador.Autos.Count > 0)
             {
-                modeloOperador.AutoId = operador.Auto.Id;
-                Auto autoActual = flota.Autos.Where(a => a.Id == operador.Auto.Id).FirstOrDefault();
+                modeloOperador.AutoId = operador.Autos.First().Id;
+                Auto autoActual = flota.Autos.Where(a => a.Id == modeloOperador.AutoId).FirstOrDefault();
                 autosCandidatos.Add(autoActual);
             }
             autosCandidatos.Add(new Auto() { Id = 0, NombreVehiculo = "No asignar" });
@@ -794,9 +975,17 @@ namespace AEOnline.Controllers.web
                     usuariosCandidatos.Reverse();
                 }
 
-                if (operador.Auto != null)
+                //if (operador.Auto != null)
+                //{
+                //    Auto autoActual = flota.Autos.Where(a => a.Id == operador.Auto.Id).FirstOrDefault();
+                //    autosCandidatos.Add(autoActual);
+                //    autosCandidatos.Add(new Auto() { Id = 0, NombreVehiculo = "No asignar" });
+                //    autosCandidatos.Reverse();
+                //}
+                if (operador.Autos.Count > 0)
                 {
-                    Auto autoActual = flota.Autos.Where(a => a.Id == operador.Auto.Id).FirstOrDefault();
+                    int idAuto = operador.Autos.First().Id;
+                    Auto autoActual = flota.Autos.Where(a => a.Id == idAuto).FirstOrDefault();
                     autosCandidatos.Add(autoActual);
                     autosCandidatos.Add(new Auto() { Id = 0, NombreVehiculo = "No asignar" });
                     autosCandidatos.Reverse();
@@ -872,7 +1061,8 @@ namespace AEOnline.Controllers.web
                 return HttpNotFound();
             }
 
-            List<Operador> operadoresSinAuto = flota.Operadores.Where(o => o.Auto == null).ToList();
+            //List<Operador> operadoresSinAuto = flota.Operadores.Where(o => o.Auto == null).ToList();
+            List<Operador> operadoresSinAuto = flota.Operadores.Where(o => o.Autos.Count == 0).ToList();
             operadoresSinAuto.Add(new Operador() { Id = 0, Nombre = "No asignar" });
             operadoresSinAuto.Reverse();
 
@@ -895,7 +1085,8 @@ namespace AEOnline.Controllers.web
 
             if (ModelState.IsValid == false)
             {
-                List<Operador> operadoresSinAuto = flota.Operadores.Where(o => o.Auto == null).ToList();
+                List<Operador> operadoresSinAuto = flota.Operadores.Where(o => o.Autos.Count == 0).ToList();
+                //List<Operador> operadoresSinAuto = flota.Operadores.Where(o => o.Auto == null).ToList();
                 operadoresSinAuto.Add(new Operador() { Id = 0, Nombre = "No asignar" });
                 operadoresSinAuto.Reverse();
 
@@ -947,8 +1138,8 @@ namespace AEOnline.Controllers.web
                 TipoVehiculoId = 0
             };
 
-
-            List<Operador> operadoresSinAuto = flota.Operadores.Where(o => o.Auto == null).ToList();
+            List<Operador> operadoresSinAuto = flota.Operadores.Where(o => o.Autos.Count == 0).ToList();
+            //List<Operador> operadoresSinAuto = flota.Operadores.Where(o => o.Auto == null).ToList();
             if (auto.OperadorId != null)
             {
                 modeloAuto.OperadorId = auto.Operador.Id;
@@ -982,8 +1173,8 @@ namespace AEOnline.Controllers.web
             if (ModelState.IsValid == false)
             {
                 Auto auto = flota.Autos.Where(a => a.Id == model.Id).FirstOrDefault();
-
-                List<Operador> operadoresSinAuto = flota.Operadores.Where(o => o.Auto == null).ToList();
+                List<Operador> operadoresSinAuto = flota.Operadores.Where(o => o.Autos.Count == 0).ToList();
+                //List<Operador> operadoresSinAuto = flota.Operadores.Where(o => o.Auto == null).ToList();
                 operadoresSinAuto.Add(new Operador() { Id = 0, Nombre = "No asignar" });
                 operadoresSinAuto.Reverse();
 
@@ -1035,10 +1226,12 @@ namespace AEOnline.Controllers.web
 
             return RedirectToAction("AutosFlota", new { id = flota.Id });
         }
-#endregion
+        #endregion
 
 
         #endregion
+
+
 
     }
 }

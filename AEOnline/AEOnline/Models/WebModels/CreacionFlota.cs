@@ -20,6 +20,7 @@ namespace AEOnline.Models.WebModels
         public virtual List<Usuario> Miembros { get; set; }
 
         public int AdminId { get; set; }
+        public int PackServicioId { get; set; }
         public string AdminNombre { get; set; }
 
         public string MiembroEmail { get; set; }

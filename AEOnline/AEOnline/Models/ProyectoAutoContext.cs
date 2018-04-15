@@ -8,8 +8,8 @@ namespace AEOnline.Models
 {
     public class ProyectoAutoContext : DbContext
     {
-        //public ProyectoAutoContext() : base("name=ProyectoAutoDB") { }
-        public ProyectoAutoContext() : base("data source=198.38.93.11;initial catalog=stappcl_aedb;user id=stappcl_oscar;password=121212;MultipleActiveResultSets=True;App=EntityFramework") { }
+        public ProyectoAutoContext() : base("name=ProyectoAutoDB") { }
+        //public ProyectoAutoContext() : base("data source=198.38.93.11;initial catalog=stappcl_aedb;user id=stappcl_oscar;password=121212;MultipleActiveResultSets=True;App=EntityFramework") { }
 
         public DbSet<Usuario> Usuarios { get; set; }
         public DbSet<Auto> Autos { get; set; }
@@ -67,5 +67,7 @@ namespace AEOnline.Models
 
 
         }
+
+        public System.Data.Entity.DbSet<AEOnline.Models.PackServicio> PackServicios { get; set; }
     }
 }

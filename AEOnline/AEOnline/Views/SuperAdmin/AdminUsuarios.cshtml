@@ -70,9 +70,13 @@
 
                     if (item.Operador != null)
                     {
-                        if (item.Operador.Auto != null)
+                        //if (item.Operador.Auto != null)
+                        //{
+                        //    patente = item.Operador.Auto.Patente;
+                        //}
+                        if(item.Operador.Autos.Count > 0)
                         {
-                            patente = item.Operador.Auto.Patente;
+                            patente = item.Operador.Autos.First().Patente;
                         }
                     }
                 }

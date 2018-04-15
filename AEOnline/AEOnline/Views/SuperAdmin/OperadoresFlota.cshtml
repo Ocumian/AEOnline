@@ -59,9 +59,13 @@
                 @{
                     string auto = "-";
 
-                    if (item.Auto != null)
+                    //if (item.Auto != null)
+                    //{
+                    //    auto = item.Auto.NombreVehiculo;
+                    //}
+                    if (item.Autos.Count > 0)
                     {
-                        auto = item.Auto.NombreVehiculo;
+                        auto = item.Autos.First().NombreVehiculo;
                     }
                 }
                 @auto

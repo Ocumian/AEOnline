@@ -1,0 +1,696 @@
+﻿@model AEOnline.Models.WebModels.GraficosCombustible
+@{
+    ViewBag.Title = "GraficosCombustible";
+
+    Layout = "~/Views/Shared/_LayoutAdminFlota2.cshtml";
+
+    string rol = "";
+
+    if (Session["Rol"] != null)
+    {
+        rol += Session["Rol"].ToString();
+    }
+
+    if (rol != "AdminDeFlota")
+    {
+        Response.Redirect("~/Login/Index");
+    }
+}
+
+<style>
+    /* Always set the map height explicitly to define the size of the div
+      * element that contains the map. */
+    html, body {
+        width: 100%;
+        height: 500px;
+        margin: 0;
+        padding: 0;
+    }
+</style>
+
+
+<h2>Resultados de las cargas de combustible</h2>
+<br />
+<table class="table">
+    <tr>
+        <th>
+            <select class="form-control" onchange="CambiarTipoHistorial(this.value)">
+                <option>Global</option>
+                <option>Por proveedor</option>
+                <option>Por vehiculo</option>
+                <option>Por operador</option>
+            </select>
+        </th>
+    </tr>
+</table>
+<div id="container" style="width: 100%; min-height: 500px"></div>
+
+
+<script src="~/Scripts/Extra/echarts.js"></script>
+<script src="~/Scripts/jquery-3.2.1.min.js"></script>
+<script src="~/Scripts/jquery-ui-1.12.1.min.js"></script>
+
+<script type="text/javascript">
+
+    var year = @Model.Year;
+    var dom = document.getElementById("container");
+    var myChart = echarts.init(dom);
+    var option = null;
+
+    GraficoBarrasGlobal();
+
+    if (option && typeof option === "object") {
+        myChart.setOption(option, true);
+    }
+
+    function CambiarTipoHistorial(val) {
+
+        if (val == "Global")
+        {
+            GraficoBarrasGlobal();
+        }
+        else if (val == "Por proveedor") {
+            GraficoBarrasPorProveedor();
+        }
+        else if (val == "Por vehiculo") {
+            GraficoBarrasPorVechiulo();
+        }
+        else if (val == "Por operador") {
+            GraficoBarrasPorOperador();
+        }
+
+        if (option && typeof option === "object") {
+            myChart.setOption(option, true);
+        }
+    }
+
+
+    function GraficoBarrasGlobal()
+    {
+        option = {
+            title: {
+                text: '',
+                subtext: 'Año ' + year
+            },
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {            // 坐标轴指示器，坐标轴触发有效
+                    type: 'shadow'        // 默认为直线，可选为：'line' | 'shadow'
+                }
+            },
+            legend: {
+                data: ["Gastos globales"]
+            },
+            toolbox: {
+            },
+            calculable: true,
+            xAxis: [
+                {
+                    name: 'Mes',
+                    type: 'category',
+                    data: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+                    axisLabel: {
+                        rotate: 45
+                    }
+                }
+            ],
+            yAxis: [
+                {
+                    name: 'CostoTotal',
+                    type: 'value'
+                }
+            ],
+            series: ObtenerSeriesGlobales()
+        };
+    }
+
+    function GraficoBarrasPorProveedor()
+    {
+        option = {
+            title: {
+                text: '',
+                subtext: 'Año '+year
+            },
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {            // 坐标轴指示器，坐标轴触发有效
+                    type: 'shadow'        // 默认为直线，可选为：'line' | 'shadow'
+                }
+            },
+            legend: {
+                data: ObtenerProveedores()
+            },
+            toolbox: {
+            },
+            calculable: true,
+            xAxis: [
+                {
+                    name: 'Mes',
+                    type: 'category',
+                    data: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+                    axisLabel: {
+                        rotate: 45
+                    }
+                }
+            ],
+            yAxis: [
+                {
+                    name: 'CostoTotal',
+                    type: 'value'
+                }
+            ],
+            series: ObtenerSeriesPorProveedor()
+        };
+    }
+
+    function GraficoBarrasPorVechiulo()
+    {
+        option = {
+            title: {
+                text: '',
+                subtext: 'Año ' + year
+            },
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {            // 坐标轴指示器，坐标轴触发有效
+                    type: 'shadow'        // 默认为直线，可选为：'line' | 'shadow'
+                }
+            },
+            legend: {
+                data: ObtenerVehiculos()
+            },
+            toolbox: {
+            },
+            calculable: true,
+            xAxis: [
+                {
+                    name: 'Mes',
+                    type: 'category',
+                    data: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+                    axisLabel: {
+                        rotate: 45
+                    }
+                }
+            ],
+            yAxis: [
+                {
+                    name: 'CostoTotal',
+                    type: 'value'
+                }
+            ],
+            series: ObtenerSeriesPorVehiculo()
+        };
+    }
+
+    function GraficoBarrasPorOperador()
+    {
+        option = {
+            title: {
+                text: '',
+                subtext: 'Año ' + year
+            },
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {            // 坐标轴指示器，坐标轴触发有效
+                    type: 'shadow'        // 默认为直线，可选为：'line' | 'shadow'
+                }
+            },
+            legend: {
+                data: ObtenerOperadores()
+            },
+            toolbox: {
+            },
+            calculable: true,
+            xAxis: [
+                {
+                    name: 'Mes',
+                    type: 'category',
+                    data: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+                    axisLabel: {
+                        rotate: 45
+                    }
+                }
+            ],
+            yAxis: [
+                {
+                    name: 'CostoTotal',
+                    type: 'value'
+                }
+            ],
+            series: ObtenerSeriesPorOperador()
+        };
+    }
+
+
+    function ObtenerProveedores()
+    {
+        var d = ["Sin Asignar"];
+
+        @{
+            for (int i = 0; i < Model.Proveedores.Count; i++)
+            {
+                 <text>
+                d.push("@Model.Proveedores[i].NombreComercial");
+                </text>
+            }
+        }
+
+        return d;
+    }
+
+    function ObtenerVehiculos()
+    {
+        var d = [];
+
+        @{
+            for (int i = 0; i < Model.Vehiculos.Count; i++)
+            {
+                 <text>
+                d.push("@Model.Vehiculos[i].NombreVehiculo");
+                </text>
+            }
+        }
+
+        return d;
+    }
+
+    function ObtenerOperadores()
+    {
+        var d = ["Sin Asignar"];
+
+        @{
+            for (int i = 0; i < Model.Operadores.Count; i++)
+            {
+                 <text>
+                d.push("@Model.Operadores[i].Nombre");
+                </text>
+            }
+        }
+
+        return d;
+    }
+
+
+    function ObtenerSeriesPorProveedor()
+    {
+        var series = [];
+
+        var prov = ObtenerProveedores();
+        var provLenght = Object.keys(prov).length;
+
+        for (var i = 0; i < provLenght; i++)
+        {
+            var nombreProv = prov[i];
+
+            var cenero = 0;
+            var cfebrero = 0;
+            var cmarzo = 0;
+            var cabril = 0;
+            var cmayo = 0;
+            var cjunio = 0;
+            var cjulio = 0;
+            var cagosto = 0;
+            var cseptiembre = 0;
+            var coctubre = 0;
+            var cnoviembre = 0;
+            var cdiciembre = 0;
+
+            @{
+                for (int z = 0; z < Model.Historiales.Count; z++)
+                {
+                    int mes = Model.Historiales[z].FechaHora.Month;
+                    string nombre = "Sin Asignar";
+                    if (Model.Historiales[z].Proveedor != null)
+                    {
+                        nombre = Model.Historiales[z].Proveedor.NombreComercial;
+                    }
+                    <text>
+
+                    if (nombreProv == "@nombre")
+                    {
+                        if (@mes == 1)
+                        {
+                            cenero += @Model.Historiales[z].CostoTotal;
+                        }
+                        else if (@mes == 2)
+                        {
+                            cfebrero += @Model.Historiales[z].CostoTotal;
+                        }
+                        else if (@mes == 3)
+                        {
+                            cmarzo += @Model.Historiales[z].CostoTotal;
+                        }
+                        else if (@mes == 4)
+                        {
+                            cabril += @Model.Historiales[z].CostoTotal;
+                        }
+                        else if (@mes == 5)
+                        {
+                            cmayo += @Model.Historiales[z].CostoTotal;
+                        }
+                        else if (@mes == 6)
+                        {
+                            cjunio += @Model.Historiales[z].CostoTotal;
+                        }
+                        else if (@mes == 7)
+                        {
+                            cjulio += @Model.Historiales[z].CostoTotal;
+                        }
+                        else if (@mes == 8)
+                        {
+                            cagosto += @Model.Historiales[z].CostoTotal;
+                        }
+                        else if (@mes == 9)
+                        {
+                            cseptiembre += @Model.Historiales[z].CostoTotal;
+                        }
+                        else if (@mes == 10)
+                        {
+                            coctubre += @Model.Historiales[z].CostoTotal;
+                        }
+                        else if (@mes == 11)
+                        {
+                            cnoviembre += @Model.Historiales[z].CostoTotal;
+                        }
+                        else if (@mes == 12)
+                        {
+                            cdiciembre += @Model.Historiales[z].CostoTotal;
+                        }
+                    }
+                    </text>
+                }
+            }
+
+
+            var nuevaSerie = {
+                name: nombreProv,
+                type: 'bar',
+                data: [cenero, cfebrero, cmarzo, cabril, cmayo, cjunio, cjulio, cagosto, cseptiembre, coctubre, cnoviembre, cdiciembre]
+            }
+
+            series.push(nuevaSerie);
+        }
+
+        return series;
+    }
+
+    function ObtenerSeriesPorVehiculo()
+    {
+        var series = [];
+
+        var vehiculos = ObtenerVehiculos();
+        var provLenght = Object.keys(vehiculos).length;
+
+        for (var i = 0; i < provLenght; i++)
+        {
+            var nombreVehiculo = vehiculos[i];
+
+            var cenero = 0;
+            var cfebrero = 0;
+            var cmarzo = 0;
+            var cabril = 0;
+            var cmayo = 0;
+            var cjunio = 0;
+            var cjulio = 0;
+            var cagosto = 0;
+            var cseptiembre = 0;
+            var coctubre = 0;
+            var cnoviembre = 0;
+            var cdiciembre = 0;
+
+            @{
+                for (int z = 0; z < Model.Historiales.Count; z++)
+                {
+                    int mes = Model.Historiales[z].FechaHora.Month;
+                    string nombre = Model.Historiales[z].Auto.NombreVehiculo;
+                    <text>
+
+                    if (nombreVehiculo == "@nombre")
+                    {
+                        if (@mes == 1)
+                        {
+                            cenero += @Model.Historiales[z].CostoTotal;
+                        }
+                        else if (@mes == 2)
+                        {
+                            cfebrero += @Model.Historiales[z].CostoTotal;
+                        }
+                        else if (@mes == 3)
+                        {
+                            cmarzo += @Model.Historiales[z].CostoTotal;
+                        }
+                        else if (@mes == 4)
+                        {
+                            cabril += @Model.Historiales[z].CostoTotal;
+                        }
+                        else if (@mes == 5)
+                        {
+                            cmayo += @Model.Historiales[z].CostoTotal;
+                        }
+                        else if (@mes == 6)
+                        {
+                            cjunio += @Model.Historiales[z].CostoTotal;
+                        }
+                        else if (@mes == 7)
+                        {
+                            cjulio += @Model.Historiales[z].CostoTotal;
+                        }
+                        else if (@mes == 8)
+                        {
+                            cagosto += @Model.Historiales[z].CostoTotal;
+                        }
+                        else if (@mes == 9)
+                        {
+                            cseptiembre += @Model.Historiales[z].CostoTotal;
+                        }
+                        else if (@mes == 10)
+                        {
+                            coctubre += @Model.Historiales[z].CostoTotal;
+                        }
+                        else if (@mes == 11)
+                        {
+                            cnoviembre += @Model.Historiales[z].CostoTotal;
+                        }
+                        else if (@mes == 12)
+                        {
+                            cdiciembre += @Model.Historiales[z].CostoTotal;
+                        }
+                    }
+                    </text>
+                }
+            }
+
+
+            var nuevaSerie = {
+                name: nombreVehiculo,
+                type: 'bar',
+                data: [cenero, cfebrero, cmarzo, cabril, cmayo, cjunio, cjulio, cagosto, cseptiembre, coctubre, cnoviembre, cdiciembre]
+            }
+
+            series.push(nuevaSerie);
+        }
+
+        return series;
+    }
+
+    function ObtenerSeriesPorOperador()
+    {
+        var series = [];
+
+        var operadores = ObtenerOperadores();
+        var provLenght = Object.keys(operadores).length;
+
+        for (var i = 0; i < provLenght; i++)
+        {
+            var nombreOperador = operadores[i];
+
+            var cenero = 0;
+            var cfebrero = 0;
+            var cmarzo = 0;
+            var cabril = 0;
+            var cmayo = 0;
+            var cjunio = 0;
+            var cjulio = 0;
+            var cagosto = 0;
+            var cseptiembre = 0;
+            var coctubre = 0;
+            var cnoviembre = 0;
+            var cdiciembre = 0;
+
+            @{
+                for (int z = 0; z < Model.Historiales.Count; z++)
+                {
+                    int mes = Model.Historiales[z].FechaHora.Month;
+                    string nombre = "Sin Asignar";
+                    if (Model.Historiales[z].Operador != null)
+                    {
+                        nombre = Model.Historiales[z].Operador.Nombre;
+                    }
+                    <text>
+
+                    if (nombreOperador == "@nombre")
+                    {
+                        if (@mes == 1)
+                        {
+                            cenero += @Model.Historiales[z].CostoTotal;
+                        }
+                        else if (@mes == 2)
+                        {
+                            cfebrero += @Model.Historiales[z].CostoTotal;
+                        }
+                        else if (@mes == 3)
+                        {
+                            cmarzo += @Model.Historiales[z].CostoTotal;
+                        }
+                        else if (@mes == 4)
+                        {
+                            cabril += @Model.Historiales[z].CostoTotal;
+                        }
+                        else if (@mes == 5)
+                        {
+                            cmayo += @Model.Historiales[z].CostoTotal;
+                        }
+                        else if (@mes == 6)
+                        {
+                            cjunio += @Model.Historiales[z].CostoTotal;
+                        }
+                        else if (@mes == 7)
+                        {
+                            cjulio += @Model.Historiales[z].CostoTotal;
+                        }
+                        else if (@mes == 8)
+                        {
+                            cagosto += @Model.Historiales[z].CostoTotal;
+                        }
+                        else if (@mes == 9)
+                        {
+                            cseptiembre += @Model.Historiales[z].CostoTotal;
+                        }
+                        else if (@mes == 10)
+                        {
+                            coctubre += @Model.Historiales[z].CostoTotal;
+                        }
+                        else if (@mes == 11)
+                        {
+                            cnoviembre += @Model.Historiales[z].CostoTotal;
+                        }
+                        else if (@mes == 12)
+                        {
+                            cdiciembre += @Model.Historiales[z].CostoTotal;
+                        }
+                    }
+                    </text>
+                }
+            }
+
+
+            var nuevaSerie = {
+                name: nombreOperador,
+                type: 'bar',
+                data: [cenero, cfebrero, cmarzo, cabril, cmayo, cjunio, cjulio, cagosto, cseptiembre, coctubre, cnoviembre, cdiciembre]
+            }
+
+            series.push(nuevaSerie);
+        }
+
+        return series;
+    }
+
+    function ObtenerSeriesGlobales()
+    {
+        var series = [];
+
+        var cenero = 0;
+        var cfebrero = 0;
+        var cmarzo = 0;
+        var cabril = 0;
+        var cmayo = 0;
+        var cjunio = 0;
+        var cjulio = 0;
+        var cagosto = 0;
+        var cseptiembre = 0;
+        var coctubre = 0;
+        var cnoviembre = 0;
+        var cdiciembre = 0;
+
+        @{
+            for (int z = 0; z < Model.Historiales.Count; z++)
+            {
+                int mes = Model.Historiales[z].FechaHora.Month;
+
+                <text>
+
+                if (@mes == 1)
+                {
+                    cenero += @Model.Historiales[z].CostoTotal;
+                }
+                else if (@mes == 2)
+                {
+                    cfebrero += @Model.Historiales[z].CostoTotal;
+                }
+                else if (@mes == 3)
+                {
+                    cmarzo += @Model.Historiales[z].CostoTotal;
+                }
+                else if (@mes == 4)
+                {
+                    cabril += @Model.Historiales[z].CostoTotal;
+                }
+                else if (@mes == 5)
+                {
+                    cmayo += @Model.Historiales[z].CostoTotal;
+                }
+                else if (@mes == 6)
+                {
+                    cjunio += @Model.Historiales[z].CostoTotal;
+                }
+                else if (@mes == 7)
+                {
+                    cjulio += @Model.Historiales[z].CostoTotal;
+                }
+                else if (@mes == 8)
+                {
+                    cagosto += @Model.Historiales[z].CostoTotal;
+                }
+                else if (@mes == 9)
+                {
+                    cseptiembre += @Model.Historiales[z].CostoTotal;
+                }
+                else if (@mes == 10)
+                {
+                    coctubre += @Model.Historiales[z].CostoTotal;
+                }
+                else if (@mes == 11)
+                {
+                    cnoviembre += @Model.Historiales[z].CostoTotal;
+                }
+                else if (@mes == 12)
+                {
+                    cdiciembre += @Model.Historiales[z].CostoTotal;
+                }
+
+                </text>
+            }
+        }
+
+
+        var nuevaSerie = {
+            name: "Gastos globales",
+            type: 'bar',
+            data: [cenero, cfebrero, cmarzo, cabril, cmayo, cjunio, cjulio, cagosto, cseptiembre, coctubre, cnoviembre, cdiciembre]
+        }
+
+        series.push(nuevaSerie);
+
+
+        return series;
+    }
+
+    $(window).on('resize', function () {
+        if (myChart != null && myChart != undefined) {
+            myChart.resize();
+        }
+    });
+
+</script>
+

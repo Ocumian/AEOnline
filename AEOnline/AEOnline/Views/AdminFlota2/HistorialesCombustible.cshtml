@@ -30,7 +30,7 @@
                             Vehículo
                         </th>
                         <th>
-                            Fecha de carga
+                            Boleta
                         </th>
                         <th>
                             Datos compra
@@ -63,7 +63,9 @@
                                 @Html.DisplayFor(modelItem => item.Auto.NombreVehiculo)
                             </td>
                             <td>
-                                @Html.DisplayFor(modelItem => item.FechaHora)
+                                <strong>Fecha :</strong>@item.FechaHora.ToString("dd/MM/yyyy")<br />
+                                <strong>RutEstación :</strong>@item.RutEstacion<br />
+                                <strong>N° Boleta :</strong>@item.NumeroDeBoleta
                             </td>
                             <td>
                                 ¿Estanque lleno?: @Html.DisplayFor(modelItem => item.EstanqueLleno)<br />
@@ -170,44 +172,46 @@
 @section scripts{
     <script>
 
+            //e  es el elemnto que hace aparecer el modal
+            //la informacion se le agrega en data-id y hay oportunidad de agregar mas como data-name, etc
+            //esa informacion se le asigna al btn ok del modal
+            $('#borrarModal').on('show.bs.modal', function (e) {
 
-        //e  es el elemnto que hace aparecer el modal
-        //la informacion se le agrega en data-id y hay oportunidad de agregar mas como data-name, etc
-        //esa informacion se le asigna al btn ok del modal
-        $('#borrarModal').on('show.bs.modal', function (e) {
-            var data = $(e.relatedTarget).data();
-            $('.modal-title', this).text("¿Está seguro que desea borrar el registro de la fecha '" + data.name + "'?");
-            $('.btn-ok', this).data('recordId', data.id);
-            $('.btn-ok', this).data('autoId', data.autoid);
-        });
-
-
-        //El boton modal cuando es clickeado lee la informacion que se le fue asignada anteriormente
-        //luego forma la url correcta y envia en modo post
-        $('#borrarModal').on('click', '.btn-ok', function (e) {
-            var $modalDiv = $(e.delegateTarget);
-            var $id = $(this).data('recordId');
-            var $autoid = $(this).data('autoId');
-            var form = $('#__AjaxAntiForgeryForm');
-            var token = $('input[name="__RequestVerificationToken"]', form).val();
-
-            $.ajax({
-                type: "POST",
-                url: "/AdminFlota2/EliminarCargaCombustible",
-                data: {
-                    __RequestVerificationToken: token,
-                    id: $id,
-                    autoid: $autoid
-                },
-                success: function (result) {
-                    location.reload(true);
-                },
-                error: function (response) {
-                    //debugger;
-                    alert('eror');
-                }
+                var data = $(e.relatedTarget).data();
+                $('.modal-title', this).text("¿Está seguro que desea borrar el registro de la fecha '" + data.name + "'?");
+                $('.btn-ok', this).data('recordId', data.id);
+                $('.btn-ok', this).data('autoId', data.autoid);
             });
-        });
+
+
+            //El boton modal cuando es clickeado lee la informacion que se le fue asignada anteriormente
+            //luego forma la url correcta y envia en modo post
+            $('#borrarModal').on('click', '.btn-ok', function (e) {
+                var $modalDiv = $(e.delegateTarget);
+                var $id = $(this).data('recordId');
+                var $autoid = $(this).data('autoId');
+                var form = $('#__AjaxAntiForgeryForm');
+                var token = $('input[name="__RequestVerificationToken"]', form).val();
+
+                $.ajax({
+                    type: "POST",
+                    url: "/AdminFlota2/EliminarCargaCombustible",
+                    data: {
+                        __RequestVerificationToken: token,
+                        id: $id,
+                        autoid: $autoid
+                    },
+                    success: function (result) {
+                        location.reload(true);
+                    },
+                    error: function (response) {
+                        //debugger;
+                        alert('eror');
+                    }
+                });
+            });
+
+
 
 
 

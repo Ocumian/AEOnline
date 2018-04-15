@@ -37,8 +37,12 @@ namespace AEOnline.Models
         [ForeignKey("UsuarioFlotaId")]
         public virtual UsuarioFlota UsuarioFlota { get; set; }
 
+        public int? PackId { get; set; }
+        [ForeignKey("PackId")]
+        public virtual PackServicio PackServicio { get; set; }
 
-        public static void CrearFlota(ProyectoAutoContext _db, string _nombre, int _idAdmin)
+
+        public static Flota CrearFlota(ProyectoAutoContext _db, string _nombre, int _idAdmin)
         {
             Flota nuevaFlota = new Flota();
             nuevaFlota.Nombre = _nombre;
@@ -79,9 +83,57 @@ namespace AEOnline.Models
             }
             _db.SaveChanges();
 
+            return nuevaFlota;
         }
 
-        public static void EditarFlota(ProyectoAutoContext _db, int _idOriginal, string _nombreNuevo, int _idAdminNuevo)
+        public static Flota CrearFlota(ProyectoAutoContext _db, string _nombre, int _idAdmin, string _nombrePackInicial)
+        {
+            Flota nuevaFlota = new Flota();
+            nuevaFlota.Nombre = _nombre;
+            nuevaFlota.Servicios = new List<Servicio>();
+            nuevaFlota.TiposVehiculo = new List<TipoVehiculo>();
+
+            _db.Flotas.Add(nuevaFlota);
+
+            if (_idAdmin != 0)
+            {
+                Usuario admin = _db.Usuarios.Where(u => u.Id == _idAdmin).FirstOrDefault();
+                UsuarioFlota uf = new UsuarioFlota()
+                {
+                    Usuario = admin,
+                    Flota = nuevaFlota
+                };
+                _db.UsuarioFlotas.Add(uf);
+                _db.SaveChanges();
+                nuevaFlota.UsuarioFlota = uf;
+                admin.UsuarioFlota = uf;
+            }
+
+            PackServicio packInicial = _db.PackServicios.Where(p => p.Nombre == _nombrePackInicial).FirstOrDefault();
+            nuevaFlota.PackServicio = packInicial;
+
+            _db.SaveChanges();
+
+            //Creacion de datos default
+
+            List<Servicio> serviciosDefault = CrearServiciosDefault();
+            List<TipoVehiculo> tiposVehiculoDefault = CrearTiposVehiculoDefault();
+
+            for (int i = 0; i < serviciosDefault.Count; i++)
+            {
+                nuevaFlota.Servicios.Add(serviciosDefault[i]);
+            }
+
+            for (int i = 0; i < tiposVehiculoDefault.Count; i++)
+            {
+                nuevaFlota.TiposVehiculo.Add(tiposVehiculoDefault[i]);
+            }
+            _db.SaveChanges();
+
+            return nuevaFlota;
+        }
+
+        public static void EditarFlota(ProyectoAutoContext _db, int _idOriginal, string _nombreNuevo, int _idAdminNuevo, int _idPackServicio)
         {
             Flota flotaOriginal = _db.Flotas.Where(f => f.Id == _idOriginal).FirstOrDefault();
             Usuario nuevoAdmin = _db.Usuarios.Where(u => u.Id == _idAdminNuevo).FirstOrDefault();
@@ -89,6 +141,10 @@ namespace AEOnline.Models
             int idAdminOriginal = 0;
             if (flotaOriginal.UsuarioFlotaId != null)
                 idAdminOriginal = flotaOriginal.UsuarioFlota.Usuario.Id;
+            int idPackOriginal = 0;
+            if (flotaOriginal.PackId != null)
+                idPackOriginal = flotaOriginal.PackServicio.Id;
+
 
             if (_idAdminNuevo != idAdminOriginal)
             {
@@ -112,6 +168,12 @@ namespace AEOnline.Models
                     nuevoAdmin.UsuarioFlota = uf;
                     flotaOriginal.UsuarioFlota = uf;
                 }
+            }
+
+            if(_idPackServicio != idPackOriginal)
+            {
+                PackServicio pack = _db.PackServicios.Where(p => p.Id == _idPackServicio).FirstOrDefault();
+                flotaOriginal.PackServicio = pack;
             }
 
             flotaOriginal.Nombre = _nombreNuevo;

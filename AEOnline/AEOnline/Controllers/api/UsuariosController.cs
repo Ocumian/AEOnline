@@ -62,9 +62,16 @@ namespace AEOnline.Controllers
                 return new RespuestaOdata() { Id = -1, Patente="", Mensaje = "Usted no tiene auto asignado."};
             if(userEncontrado.Rol == Usuario.RolUsuario.Bloqueado)
                 return new RespuestaOdata() { Id = -1, Patente="", Mensaje = "Cuenta bloqueada" };
+            if(userEncontrado.Operador.Autos.Count == 0)
+                return new RespuestaOdata() { Id = -1, Patente = "", Mensaje = "Usted no tiene auto asignado" };
 
-            int idAuto = userEncontrado.Operador.Auto.Id;
-            string patenteAuto = userEncontrado.Operador.Auto.Patente;
+            //int idAuto = userEncontrado.Operador.Auto.Id;
+            //string patenteAuto = userEncontrado.Operador.Auto.Patente;
+
+            int idAuto = userEncontrado.Operador.Autos.First().Id;
+            string patenteAuto = userEncontrado.Operador.Autos.First().Patente;
+
+
 
             //Todo ok, responder con la ID y patente que le corresponde
             return new RespuestaOdata() { Id = idAuto, Patente = patenteAuto , Mensaje = "Sesión iniciada correctamente." };
@@ -95,7 +102,7 @@ namespace AEOnline.Controllers
                 Nombre = nombre,
                 Email = emailUser,
                 Password = passEncriptada,
-                Rol = Usuario.RolUsuario.Normal
+                Rol = Usuario.RolUsuario.AdminDeFlota
             };
 
             db.Usuarios.Add(nuevoUser);
@@ -131,7 +138,7 @@ namespace AEOnline.Controllers
         }
 
         //POST: odata/Usuarios/CargarCombustible
-        //Parametros: idAuto,FechaHora,EstanqueLLeno,CantidadLitros,CostoUnitario,Kilometraje,IdProveedor
+        //Parametros: idAuto,FechaHora,EstanqueLLeno,CantidadLitros,CostoUnitario,Kilometraje,IdProveedor,RutProveedor,NumeroBoleta
         public RespuestaOdata CargarCombustible(ODataActionParameters parameters)
         {
             if (parameters == null)
@@ -145,6 +152,8 @@ namespace AEOnline.Controllers
             int costoUnitario = (int)parameters["CostoUnitario"];
             int kilometraje = (int)parameters["Kilometraje"];
             int idProveedor = (int)parameters["IdProveedor"];
+            string rutProv = (string)parameters["RutProveedor"];
+            int numeroBoleta = (int)parameters["NumeroBoleta"];
 
             fechaString = fechaString.Replace('-', '/');
             bool result = DateTime.TryParseExact(fechaString, FormatoFecha.formato, FormatoFecha.provider, DateTimeStyles.None, out fechaHoraCarga);
@@ -180,7 +189,7 @@ namespace AEOnline.Controllers
             if(idProveedor != 0)
                 proveedor = db.Proveedores.Where(p => p.Id == idProveedor).FirstOrDefault();
 
-            HistorialCargaCombustible.NuevaCargaCombustible(db, idAuto, fechaHoraCarga, fechaHoraCarga, estanqueLleno, cantidadLitros, costoUnitario, kilometraje, proveedor);
+            HistorialCargaCombustible.NuevaCargaCombustible(db, idAuto, fechaHoraCarga, fechaHoraCarga, estanqueLleno, cantidadLitros, costoUnitario, kilometraje, proveedor, rutProv, numeroBoleta);
 
             return new RespuestaOdata() { Id = 1, Mensaje = "Carga de combustible existosa." };
         }
@@ -195,7 +204,11 @@ namespace AEOnline.Controllers
             double lat = (double)parameters["lat"];
             double lng = (double)parameters["lng"];
 
-            string calle = Posicion.ObtenerCalle(lat, lng);
+            List<Placemark> datos = Posicion.ObtenerDatosPosición(lat, lng);
+
+            string calle = "";
+            if (datos != null)
+                calle = datos[0].ThoroughfareName;
 
             return calle;
         }

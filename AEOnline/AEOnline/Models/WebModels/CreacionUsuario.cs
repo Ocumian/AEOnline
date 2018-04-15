@@ -23,15 +23,15 @@ namespace AEOnline.Models.WebModels
         [Required]
         public Usuario.RolUsuario Rol { get; set; }
 
-        [Required]
+
         public string Password { get; set; }
 
-        [Required]
         [Compare("Password", ErrorMessage = "La contraseña no coincide, intenta de nuevo.")]
         public string ConfirmPassword { get; set; }
 
         public int AutoId { get; set; }
         public string AutoPatente { get; set; }
+        public string AutoNombre { get; set; }
 
         public int FlotaId { get; set; }
         public string FlotaNombre { get; set; }

@@ -68,7 +68,7 @@
                             </div>
                             <div class="col-md-6">
                                 <p>Kilometraje Actual</p>
-                                @Html.EditorFor(model => model.KilometrajeActual, new { htmlAttributes = new { @class = "form-control" } })
+                                @Html.EditorFor(model => model.KilometrajeActual, new { htmlAttributes = new { @class = "form-control" , @min = "0"} })
                                 @Html.ValidationMessageFor(model => model.KilometrajeActual, "", new { @class = "text-danger" })
                             </div>
                         </div>

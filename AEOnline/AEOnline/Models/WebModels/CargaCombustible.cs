@@ -28,6 +28,12 @@ namespace AEOnline.Models.WebModels
         public int CostoTotal { get; set; }
         [Required]
         public int Kilometraje { get; set; }
+        [Required]
+        public string RutEstacion { get; set; }
+        [Required]
+        [Range(1,int.MaxValue, ErrorMessage = "Debe ingresar un número de boleta")]
+        public int NumeroDeBoleta { get; set; }
+
 
         public int ProveedorId { get; set; }
         public int VehiculoId { get; set; }

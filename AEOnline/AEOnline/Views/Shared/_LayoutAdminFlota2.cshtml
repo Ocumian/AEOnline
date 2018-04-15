@@ -14,9 +14,30 @@
     <!-- Custom styles for this template-->
     <link href="~/css/sb-admin.css" rel="stylesheet">
 </head>
-<body class="fixed-nav sticky-footer bg-dark" id="page-top">
+<body class="fixed-nav sticky-footer bg-light" id="page-top">
+
+    @{ 
+        bool mostrarCombustible = true;
+        bool mostrarMantencion = true;
+
+        if (Session["Flota"] != null)
+        {
+            AEOnline.Models.ProyectoAutoContext db = new AEOnline.Models.ProyectoAutoContext();
+
+            int idFlota = (int)Session["Flota"];
+
+            AEOnline.Models.Flota flota = db.Flotas.Where(f => f.Id == idFlota).FirstOrDefault();
+
+            if(flota.PackId != null)
+            {
+                mostrarCombustible = flota.PackServicio.ModuloCombustible;
+                mostrarMantencion = flota.PackServicio.ModuloMantencion;
+            }
+        }
+ }
+
     <!-- Navigation-->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top" id="mainNav">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top" id="mainNav">
         <a class="navbar-brand" href="@Url.Action("Index","AdminFlota2")">Bienvenido</a>
         <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
@@ -42,9 +63,6 @@
                             <a href="@Url.Action("CrearAuto", "AdminFlota2")"><i class="fa fa-fw fa-plus"></i> Crear nuevo auto</a>
                         </li>
                         <li>
-                            <a href="@Url.Action("HistorialesCombustible", "AdminFlota2")"><i class="fa fa-fw fa-tint"></i> Registros combustible</a>
-                        </li>
-                        <li>
                             <a href="@Url.Action("AdministrarTipos", "AdminFlota2")"><i class="fa fa-fw fa-gears"></i> Tipos de vehículo</a>
                         </li>
                     </ul>
@@ -64,15 +82,102 @@
 
                     </ul>
                 </li>
+@{
+if (mostrarCombustible)
+{
+            <text>
+                <li class="nav-item" data-toggle="tooltip" data-placement="right" title="Combustible">
+                    <a class="nav-link nav-link-collapse collapsed" data-toggle="collapse" href="#collapseCombustible" data-parent="#exampleAccordion">
+                        <i class="fa fa-fw fa-tint"></i>
+                        <span class="nav-link-text">Combustible</span>
+                    </a>
+                    <ul class="sidenav-second-level collapse" id="collapseCombustible">
+                        <li>
+                            <a href="@Url.Action("HistorialesCombustible", "AdminFlota2")"><i class="fa fa-fw fa-list"></i> Historiales</a>
+                        </li>
+                        <li>
+                            <a href="@Url.Action("CargarCombustible", "AdminFlota2")"><i class="fa fa-fw fa-tint"></i> Cargar combustible</a>
+                        </li>
+                        <li>
+                            <a href="@Url.Action("GraficosCombustible", "AdminFlota2")"><i class="fa fa-fw fa-bar-chart"></i> Estadísticas</a>
+                        </li>
+
+                    </ul>
+                </li>
+            </text>
+}
+if (mostrarMantencion)
+{
+            <text>
                 <li class="nav-item" data-toggle="tooltip" data-placement="right" title="Mantenciones">
                     <a class="nav-link nav-link-collapse collapsed" data-toggle="collapse" href="#collapseServices" data-parent="#exampleAccordion">
                         <i class="fa fa-fw fa-wrench"></i>
                         <span class="nav-link-text">Mantenciones</span>
                     </a>
-                     <ul class="sidenav-second-level collapse" id="collapseServices">
-                         <li>
-                             <a href="@Url.Action("AdministrarMantenciones", "AdminFlota2")"><i class="fa fa-fw fa-list"></i>Historiales</a>
-                         </li>
+                    <ul class="sidenav-second-level collapse" id="collapseServices">
+                        <li>
+                            <a href="@Url.Action("AdministrarMantenciones", "AdminFlota2")"><i class="fa fa-fw fa-list"></i>Historiales</a>
+                        </li>
+                        <li>
+                            <a href="@Url.Action("AplicarMantenimiento", "AdminFlota2")"><i class="fa fa-fw fa-wrench"></i> Aplicar Mantenimiento</a>
+                        </li>
+                        <li>
+                            <a href="@Url.Action("CatalogoServicios", "AdminFlota2")"><i class="fa fa-fw fa-gears"></i> Catálogo de Servicios</a>
+                        </li>
+                    </ul>
+                </li>
+            </text>
+}
+if (mostrarCombustible || mostrarMantencion)
+{
+            <text>
+                <li class="nav-item" data-toggle="tooltip" data-placement="right" title="Proveedores">
+                    <a class="nav-link nav-link-collapse collapsed" data-toggle="collapse" href="#collapseExamplePages" data-parent="#exampleAccordion">
+                        <i class="fa fa-fw fa-file"></i>
+                        <span class="nav-link-text">Proveedores</span>
+                    </a>
+                    <ul class="sidenav-second-level collapse" id="collapseExamplePages">
+                        <li>
+                            <a href="@Url.Action("AdministrarProveedores", "AdminFlota2")"><i class="fa fa-fw fa-list"></i> Administrar</a>
+                        </li>
+                        <li>
+                            <a href="@Url.Action("CrearProveedor", "AdminFlota2")"><i class="fa fa-fw fa-plus"></i> Crear nuevo proveedor</a>
+                        </li>
+
+                    </ul>
+                </li>
+            </text>
+}
+
+ }
+                @*<li class="nav-item" data-toggle="tooltip" data-placement="right" title="Combustible">
+                    <a class="nav-link nav-link-collapse collapsed" data-toggle="collapse" href="#collapseCombustible" data-parent="#exampleAccordion">
+                        <i class="fa fa-fw fa-tint"></i>
+                        <span class="nav-link-text">Combustible</span>
+                    </a>
+                    <ul class="sidenav-second-level collapse" id="collapseCombustible">
+                        <li>
+                            <a href="@Url.Action("HistorialesCombustible", "AdminFlota2")"><i class="fa fa-fw fa-list"></i> Historiales</a>
+                        </li>
+                        <li>
+                            <a href="@Url.Action("CargarCombustible", "AdminFlota2")"><i class="fa fa-fw fa-tint"></i> Cargar combustible</a>
+                        </li>
+                        <li>
+                            <a href="@Url.Action("GraficosCombustible", "AdminFlota2")"><i class="fa fa-fw fa-bar-chart"></i> Estadísticas</a>
+                        </li>
+
+                    </ul>
+                </li>
+
+                <li class="nav-item" data-toggle="tooltip" data-placement="right" title="Mantenciones">
+                    <a class="nav-link nav-link-collapse collapsed" data-toggle="collapse" href="#collapseServices" data-parent="#exampleAccordion">
+                        <i class="fa fa-fw fa-wrench"></i>
+                        <span class="nav-link-text">Mantenciones</span>
+                    </a>
+                    <ul class="sidenav-second-level collapse" id="collapseServices">
+                        <li>
+                            <a href="@Url.Action("AdministrarMantenciones", "AdminFlota2")"><i class="fa fa-fw fa-list"></i>Historiales</a>
+                        </li>
                         <li>
                             <a href="@Url.Action("AplicarMantenimiento", "AdminFlota2")"><i class="fa fa-fw fa-wrench"></i> Aplicar Mantenimiento</a>
                         </li>
@@ -94,25 +199,45 @@
                         <li>
                             <a href="@Url.Action("CrearProveedor", "AdminFlota2")"><i class="fa fa-fw fa-plus"></i> Crear nuevo proveedor</a>
                         </li>
-    
+
                     </ul>
-                </li>
-   
+                </li>*@
+
                 <li class="nav-item" data-toggle="tooltip" data-placement="right" title="Mapa de la flota">
                     <a class="nav-link" href="@Url.Action("MapaDeFlota", "AdminFlota2")">
                         <i class="fa fa-fw fa-map"></i>
                         <span class="nav-link-text">Mapa</span>
                     </a>
                 </li>
+
+                @*<li class="nav-item" data-toggle="tooltip" data-placement="right" title="Configuración">
+            <a class="nav-link nav-link-collapse collapsed" data-toggle="collapse" href="#collapseConfiguration" data-parent="#exampleAccordion">
+                <i class="fa fa-fw fa-file"></i>
+                <span class="nav-link-text">Configuración</span>
+            </a>
+            <ul class="sidenav-second-level collapse" id="collapseConfiguration">
+                <li href="#" id="toggleNavColor"><a href="#"><i class="fa fa-fw fa-list"></i> Cambiar Tema</a></li>
+            </ul>
+        </li>*@
             </ul>
 
             <ul class="navbar-nav sidenav-toggler">
+            <li class="nav-item">
+                <a class="nav-link text-center" id="sidenavToggler">
+                    @*<i class="fa fa-fw fa-angle-left"></i>*@
+                    © 2018 - Stapp
+                </a>
+            </li>
+            </ul>
+            
+            @*Minimizar*@
+            @*<ul class="navbar-nav sidenav-toggler">
                 <li class="nav-item">
                     <a class="nav-link text-center" id="sidenavToggler">
                         <i class="fa fa-fw fa-angle-left"></i>
                     </a>
                 </li>
-            </ul>
+            </ul>*@
             <ul class="navbar-nav ml-auto">
                 <li class="nav-item">
                     <a class="nav-link" data-toggle="modal" data-target="#exampleModal" >
@@ -122,6 +247,8 @@
             </ul>
         </div>
     </nav>
+
+
     <div class="content-wrapper">
         <div class="container-fluid">
 
@@ -140,6 +267,7 @@
         <a class="scroll-to-top rounded" href="#page-top">
             <i class="fa fa-angle-up"></i>
         </a>
+
         <!-- Logout Modal-->
         <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
             <div class="modal-dialog" role="document">
@@ -158,36 +286,41 @@
                 </div>
             </div>
         </div>
-        <!-- Bootstrap core JavaScript-->
-        <script src="~/vendor/jquery/jquery.min.js"></script>
-        <script src="~/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-        <!-- Core plugin JavaScript-->
-        <script src="~/vendor/jquery-easing/jquery.easing.min.js"></script>
-        <!-- Custom scripts for all pages-->
-        <script src="~/js/sb-admin.min.js"></script>
-        <!-- Custom scripts for this page-->
-        <!-- Toggle between fixed and static navbar-->
-        <script>
-            $('#toggleNavPosition').click(function () {
-                $('body').toggleClass('fixed-nav');
-                $('nav').toggleClass('fixed-top static-top');
-            });
 
-        </script>
-        <!-- Toggle between dark and light navbar-->
-        <script>
-            $('#toggleNavColor').click(function () {
-                $('nav').toggleClass('navbar-dark navbar-light');
-                $('nav').toggleClass('bg-dark bg-light');
-                $('body').toggleClass('bg-dark bg-light');
-            });
-
-        </script>
+        
     </div>
 
-    @Scripts.Render("~/bundles/jquery")
-    @Scripts.Render("~/bundles/bootstrap")
-    @RenderSection("scripts", required: false)
+
 </body>
 </html>
 
+@Scripts.Render("~/bundles/jquery")
+@Scripts.Render("~/bundles/bootstrap")
+@RenderSection("scripts", required: false)
+
+<!-- Bootstrap core JavaScript-->
+@*<script src="~/vendor/jquery/jquery.min.js"></script>*@
+@*<script src="~/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>*@
+<!-- Core plugin JavaScript-->
+@*<script src="~/vendor/jquery-easing/jquery.easing.min.js"></script>*@
+<!-- Custom scripts for all pages-->
+@*<script src="~/js/sb-admin.min.js"></script>*@
+<!-- Custom scripts for this page-->
+<!-- Toggle between fixed and static navbar-->
+
+<script>
+    $('#toggleNavPosition').click(function () {
+        $('body').toggleClass('fixed-nav');
+        $('nav').toggleClass('fixed-top static-top');
+    });
+
+</script>
+<!-- Toggle between dark and light navbar-->
+<script>
+    $('#toggleNavColor').click(function () {
+        $('nav').toggleClass('navbar-dark navbar-light');
+        $('nav').toggleClass('bg-dark bg-light');
+        $('body').toggleClass('bg-dark bg-light');
+    });
+
+</script>

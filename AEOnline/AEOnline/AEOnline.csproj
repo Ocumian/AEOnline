@@ -227,6 +227,7 @@
     <Compile Include="ClasesAdicionales\PasswordHash.cs" />
     <Compile Include="ClasesAdicionales\Posicion.cs" />
     <Compile Include="ClasesAdicionales\RegistroHistorial.cs" />
+    <Compile Include="ClasesAdicionales\Ruta.cs" />
     <Compile Include="Controllers\api\AutosController.cs" />
     <Compile Include="Controllers\api\FlotasController.cs" />
     <Compile Include="Controllers\api\HistorialVelocidadesController.cs" />
@@ -234,6 +235,7 @@
     <Compile Include="Controllers\api\UsuariosController.cs" />
     <Compile Include="Controllers\web\AdminFlota2Controller.cs" />
     <Compile Include="Controllers\web\LoginController.cs" />
+    <Compile Include="Controllers\web\PackServiciosController.cs" />
     <Compile Include="Controllers\web\SuperAdminController.cs" />
     <Compile Include="Controllers\web\UserNormalController.cs" />
     <Compile Include="Global.asax.cs">
@@ -251,6 +253,42 @@
     <Compile Include="Migrations\201802282233451_OperadorTipoDeLicencia.Designer.cs">
       <DependentUpon>201802282233451_OperadorTipoDeLicencia.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201803072046138_OperadorDeHistCombustibleMantencion.cs" />
+    <Compile Include="Migrations\201803072046138_OperadorDeHistCombustibleMantencion.Designer.cs">
+      <DependentUpon>201803072046138_OperadorDeHistCombustibleMantencion.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201803080109365_RUTyNumBoletaHistorialCombustible.cs" />
+    <Compile Include="Migrations\201803080109365_RUTyNumBoletaHistorialCombustible.Designer.cs">
+      <DependentUpon>201803080109365_RUTyNumBoletaHistorialCombustible.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201803090321099_DistanciaTramo.cs" />
+    <Compile Include="Migrations\201803090321099_DistanciaTramo.Designer.cs">
+      <DependentUpon>201803090321099_DistanciaTramo.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201803290001584_atajoAutos.cs" />
+    <Compile Include="Migrations\201803290001584_atajoAutos.Designer.cs">
+      <DependentUpon>201803290001584_atajoAutos.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201804051821217_HistorialPosicionUpdate-GPsoff-Localidad.cs" />
+    <Compile Include="Migrations\201804051821217_HistorialPosicionUpdate-GPsoff-Localidad.Designer.cs">
+      <DependentUpon>201804051821217_HistorialPosicionUpdate-GPsoff-Localidad.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201804061504353_GpsOffParche.cs" />
+    <Compile Include="Migrations\201804061504353_GpsOffParche.Designer.cs">
+      <DependentUpon>201804061504353_GpsOffParche.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201804140058337_OperadorVariosAutos.cs" />
+    <Compile Include="Migrations\201804140058337_OperadorVariosAutos.Designer.cs">
+      <DependentUpon>201804140058337_OperadorVariosAutos.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201804140206144_PackServicios.cs" />
+    <Compile Include="Migrations\201804140206144_PackServicios.Designer.cs">
+      <DependentUpon>201804140206144_PackServicios.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201804152003183_fixPackServiciosbools.cs" />
+    <Compile Include="Migrations\201804152003183_fixPackServiciosbools.Designer.cs">
+      <DependentUpon>201804152003183_fixPackServiciosbools.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\Alerta.cs" />
     <Compile Include="Models\Auto.cs" />
@@ -265,6 +303,7 @@
     <Compile Include="Models\HistorialVelocidad.cs" />
     <Compile Include="Models\MantencionServicio.cs" />
     <Compile Include="Models\Operador.cs" />
+    <Compile Include="Models\PackServicio.cs" />
     <Compile Include="Models\Proveedor.cs" />
     <Compile Include="Models\ProyectoAutoContext.cs" />
     <Compile Include="Models\Recordatorio.cs" />
@@ -272,12 +311,14 @@
     <Compile Include="Models\TipoVehiculo.cs" />
     <Compile Include="Models\Usuario.cs" />
     <Compile Include="Models\UsuarioFlota.cs" />
+    <Compile Include="Models\WebModels\AtajosPanelInicial.cs" />
     <Compile Include="Models\WebModels\CargaCombustible.cs" />
     <Compile Include="Models\WebModels\CreacionAuto.cs" />
     <Compile Include="Models\WebModels\CreacionFlota.cs" />
     <Compile Include="Models\WebModels\CreacionMantencion.cs" />
     <Compile Include="Models\WebModels\CreacionOperador.cs" />
     <Compile Include="Models\WebModels\CreacionUsuario.cs" />
+    <Compile Include="Models\WebModels\GraficosCombustible.cs" />
     <Compile Include="Models\WebModels\HistorialWeb.cs" />
     <Compile Include="Models\WebModels\PuntoGrafico.cs" />
     <Compile Include="Models\WebModels\RespuestaOdata.cs" />
@@ -353,6 +394,7 @@
     <Content Include="Content\bootstrap-theme.min.css.map" />
     <Content Include="Content\bootstrap-theme.css.map" />
     <Content Include="css\bootstrap.css.map" />
+    <Content Include="Imagenes\logo-ayn.jpg" />
     <Content Include="js\dist\alert.js.map" />
     <Content Include="js\dist\button.js.map" />
     <Content Include="js\dist\carousel.js.map" />
@@ -384,6 +426,7 @@
     <Content Include="pug\navbar.pug" />
     <Content Include="pug\register.pug" />
     <Content Include="pug\tables.pug" />
+    <Content Include="package.json" />
     <None Include="Scripts\jquery-3.2.1.intellisense.js" />
     <Content Include="js\bootstrap.js" />
     <Content Include="js\bootstrap.min.js" />
@@ -450,7 +493,6 @@
     <Content Include="Scripts\dateformat.js" />
     <Content Include="Scripts\dateformat.min.js" />
     <Content Include="Scripts\Extra\echarts.js" />
-    <Content Include="Scripts\Extra\Tetris.js" />
     <Content Include="Scripts\jquery-3.2.1.js" />
     <Content Include="Scripts\jquery-3.2.1.min.js" />
     <Content Include="Scripts\jquery-3.2.1.slim.js" />
@@ -515,7 +557,6 @@
     <Content Include="Views\Login\Index.cshtml" />
     <Content Include="Views\Shared\_LayoutUserNormal.cshtml" />
     <Content Include="Views\Shared\_LayoutSuperAdmin.cshtml" />
-    <Content Include="Views\Shared\_LayoutAdminFlota.cshtml" />
     <Content Include="Views\Login\PrimerUsuario.cshtml" />
     <Content Include="Views\SuperAdmin\Index.cshtml" />
     <Content Include="Views\SuperAdmin\AdminUsuarios.cshtml" />
@@ -705,8 +746,15 @@
     <Content Include="Views\AdminFlota2\FichaProveedor.cshtml" />
     <Content Include="Views\AdminFlota2\EditarMantencion.cshtml" />
     <Content Include="Views\AdminFlota2\EditarCargaCombustible.cshtml" />
-    <Content Include="Views\UserNormal\_EstadisticaPosicionV2.cshtml" />
     <Content Include="Views\Login\RegistroUsuario.cshtml" />
+    <Content Include="Views\AdminFlota2\GraficosCombustible.cshtml" />
+    <Content Include="Views\Login\AcercaDe.cshtml" />
+    <Content Include="Views\SuperAdmin\RegistrosCelular.cshtml" />
+    <Content Include="Views\PackServicios\Create.cshtml" />
+    <Content Include="Views\PackServicios\Delete.cshtml" />
+    <Content Include="Views\PackServicios\Details.cshtml" />
+    <Content Include="Views\PackServicios\Edit.cshtml" />
+    <Content Include="Views\PackServicios\Index.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
@@ -728,6 +776,33 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201802282233451_OperadorTipoDeLicencia.resx">
       <DependentUpon>201802282233451_OperadorTipoDeLicencia.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201803072046138_OperadorDeHistCombustibleMantencion.resx">
+      <DependentUpon>201803072046138_OperadorDeHistCombustibleMantencion.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201803080109365_RUTyNumBoletaHistorialCombustible.resx">
+      <DependentUpon>201803080109365_RUTyNumBoletaHistorialCombustible.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201803090321099_DistanciaTramo.resx">
+      <DependentUpon>201803090321099_DistanciaTramo.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201803290001584_atajoAutos.resx">
+      <DependentUpon>201803290001584_atajoAutos.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201804051821217_HistorialPosicionUpdate-GPsoff-Localidad.resx">
+      <DependentUpon>201804051821217_HistorialPosicionUpdate-GPsoff-Localidad.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201804061504353_GpsOffParche.resx">
+      <DependentUpon>201804061504353_GpsOffParche.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201804140058337_OperadorVariosAutos.resx">
+      <DependentUpon>201804140058337_OperadorVariosAutos.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201804140206144_PackServicios.resx">
+      <DependentUpon>201804140206144_PackServicios.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201804152003183_fixPackServiciosbools.resx">
+      <DependentUpon>201804152003183_fixPackServiciosbools.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

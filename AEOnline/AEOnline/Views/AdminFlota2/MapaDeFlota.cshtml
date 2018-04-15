@@ -18,23 +18,96 @@
 }
 
 <style>
-    /* Always set the map height explicitly to define the size of the div
-      * element that contains the map. */
-    #map {
-        height: 550px;
-        width: 1000px;
-    }
-    /* Optional: Makes the sample page fill the window. */
-    html, body {
-        height: 100%;
+    html, body, #map {
+        width: 100%;
+        height: 500px;
         margin: 0;
         padding: 0;
     }
+
+    #map {
+        position: relative;
+    }
 </style>
+
+
 
 <h2>Mapa de la flota</h2>
 
+<div id="myDynamicTable"></div>
+
 <div id="map"></div>
+
+
+<script>
+
+
+    function CambiarCentroMapa(lat, lng) {
+        var punto = new google.maps.LatLng(lat, lng);
+        map.setCenter(punto);
+    }
+
+    function InicializarCelda(fila, valor, titulo) {
+        var td = fila.insertCell();
+
+        var contenido = "";
+
+        if (titulo == true) {
+            contenido = '<center><b>' + valor + '</b></center>';
+        }
+        else {
+            contenido = '<center>' + valor + '</center>';
+        }
+
+        td.insertAdjacentHTML('beforeend', contenido);
+        td.style.border = '1px solid black';
+    }
+
+
+    function tableCreate(filas, array) {
+        var myTableDiv = document.getElementById("myDynamicTable");
+        myTableDiv.innerHTML = "";
+
+        var tbl = document.createElement('table');
+        tbl.style.width = '100px';
+        tbl.style.border = '1px solid black';
+
+
+
+        var tr = tbl.insertRow();
+
+        InicializarCelda(tr, "Marcador", true);
+        InicializarCelda(tr, "Nombre", true);
+        InicializarCelda(tr, "Patente", true);
+        InicializarCelda(tr, "Operador", true);
+
+        for (var i = 0; i < filas; i++) {
+
+
+            var nombre = array[i].Nombre;
+            var patente = array[i].Patente;
+            var operador = array[i].Operador;
+
+            var lat = array[i].Latitud;
+            var lng = array[i].Longitud;
+
+            var tr = tbl.insertRow();
+
+            InicializarCelda(tr, '<input type="image" onclick="CambiarCentroMapa(' + lat + ', ' + lng + ')" src="http://maps.google.com/mapfiles/ms/icons/green-dot.png" />', false);
+            InicializarCelda(tr, nombre, false);
+            InicializarCelda(tr, patente, false);
+            InicializarCelda(tr, operador, false);
+            
+        }
+
+        myTableDiv.appendChild(tbl);
+    }
+
+
+
+</script>
+
+
 
 
 
@@ -42,17 +115,41 @@
     var map;
     var markersMapa = [];
 
-    function initMap()
-    {
+    function initMap() {
+        @{ 
+            List<AEOnline.Models.Auto> autos = Model.Autos;
+            AEOnline.Models.Auto autoCentrado = null;
+            for (int i = 0; i < autos.Count; i++)
+            {
+                if(autos[i].Latitud != 0 && autos[i].Longitud != 0)
+                {
+                    autoCentrado = autos[i];
+                    break;
+                }
+            }
+            double latCentro = 0;
+            double lngCentro = 0;
+
+            if(autoCentrado != null)
+            {
+                latCentro = autoCentrado.Latitud;
+                lngCentro = autoCentrado.Longitud;
+            }
+
+        }
 
         map = new google.maps.Map(document.getElementById('map'), {
             center:
-            { lat: -40.574351, lng: -73.131871 },
+            {
+                lat:  0, lng: 0      
+            },
             zoom: 15
         });
 
+        var punto = new google.maps.LatLng(@latCentro.ToString().Replace(',', '.'), @lngCentro.ToString().Replace(',', '.'));
+        map.setCenter(punto);
+
         @{
-            List<AEOnline.Models.Auto> autos = Model.Autos;
 
             for (int i = 0; i < autos.Count; i++)
             {
@@ -88,8 +185,8 @@
 
                 var id = this.get("id");
                 infowindow.setContent("<strong>Patente:</strong> " + this.get("patente") + "</br>"
-                    + '<a href="/AdminFlota/FichaAuto/' + id + '?menu=0"> Ver ficha</a><br>'
-                    + '<a href="/AdminFlota/RegistrosCelular/' + id + '?tipo=1"> Ver registros celular</a><br>');
+                    + '<a href="/AdminFlota2/FichaAuto/' + id + '?menu=0"> Ver ficha</a><br>'
+                    + '<a href="/AdminFlota2/RegistrosCelular/' + id + '?tipo=1"> Ver registros celular</a><br>');
 
                 infowindow.open(map, this);
             });
@@ -104,31 +201,35 @@
 
             $.ajax({
             type: "GET",
-            url: "/AdminFlota/getPosicionesFlota",
+            url: "/AdminFlota2/getPosicionesFlota",
             data:
             {
-                nombreFlota: "@Model.Nombre"
+                _idFlota: @Model.Id
             },
 
             contentType: "application/json;charset=utf-8",
             dataType: "json",
             success: function (result) {
 
-                        var array = JSON.parse(result.respuesta);
-                        var arrayLenght = Object.keys(array).length;
+                var array = JSON.parse(result.respuesta);
+                var arrayLenght = Object.keys(array).length;
 
-                        for (var i = 0; i < arrayLenght; i++)
-                        {
-                            var patente = array[i].Patente;
-                            var latlng = new google.maps.LatLng(array[i].Latitud, array[i].Longitud);
+                for (var i = 0; i < arrayLenght; i++)
+                {
+                    var patente = array[i].Patente;
+                    var latlng = new google.maps.LatLng(array[i].Latitud, array[i].Longitud);
 
-                            var markerfound = markersMapa.find(function (markerDeArray)
-                            {
-                                return markerDeArray.get("patente") == patente;
-                            });
+                    var markerfound = markersMapa.find(function (markerDeArray)
+                    {
+                        return markerDeArray.get("patente") == patente;
+                    });
 
-                        markerfound.setPosition(latlng);
-                    }
+                    markerfound.setPosition(latlng);
+                }
+
+                tableCreate(arrayLenght, array);
+
+                    
                 },
             error: function (response) {
                     //alert('eror');

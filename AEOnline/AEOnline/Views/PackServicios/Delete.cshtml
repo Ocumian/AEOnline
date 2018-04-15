@@ -1,0 +1,78 @@
+﻿@model AEOnline.Models.PackServicio
+
+@{
+    ViewBag.Title = "Delete";
+
+    Layout = "~/Views/Shared/_LayoutSuperAdmin.cshtml";
+
+    string rol = "";
+
+    if (Session["Rol"] != null)
+    {
+        rol += Session["Rol"].ToString();
+    }
+
+    if (rol != "SuperAdmin")
+    {
+        Response.Redirect("~/Login/Index");
+    }
+}
+
+<h2>Eliminar</h2>
+
+<h3>¿Está seguro que desea eliminar esto?</h3>
+<div>
+    <h4>Pack de Servicio</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.Nombre)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Nombre)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.NumeroVehiculos)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.NumeroVehiculos)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.NumeroOperadores)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.NumeroOperadores)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.ModuloCombustible)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.ModuloCombustible)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.ModuloMantencion)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.ModuloMantencion)
+        </dd>
+
+    </dl>
+
+    @using (Html.BeginForm()) {
+        @Html.AntiForgeryToken()
+
+        <div class="form-actions no-color">
+            <input type="submit" value="Delete" class="btn btn-default" /> |
+            @Html.ActionLink("Volver a la lista", "Index")
+        </div>
+    }
+</div>

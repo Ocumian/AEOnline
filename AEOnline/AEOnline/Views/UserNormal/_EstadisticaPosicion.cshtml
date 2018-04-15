@@ -1,6 +1,8 @@
 ﻿@model AEOnline.Models.WebModels.HistorialWeb
 
 <head>
+    <script src="~/Scripts/Extra/echarts.js"></script>
+
 
     @*Referencias para usar TimePicker*@
     <link href="~/Content/themes/base/jquery-ui.min.css" rel="stylesheet" />
@@ -11,49 +13,191 @@
 
 </head>
 
+
 <style>
-    /* Always set the map height explicitly to define the size of the div
-      * element that contains the map. */
-    #map {
+
+    html, body, #map {
+        width: 100%;
         height: 500px;
-        width: 1200px;
-    }
-    /* Optional: Makes the sample page fill the window. */
-    html, body {
-        height: 100%;
         margin: 0;
         padding: 0;
     }
+
+    #map {
+        position: relative;
+    }
+
 </style>
+
 
 <h1>Historial de posición</h1>
 <br />
 
 
-<table class="table">
-    <tr>
-        <th>
-            <strong>Desde:</strong><br />
-            <input type="text" id="desdePicker" class="form-control" />
-        </th>
-        <th>
-            <strong>Hasta:</strong><br />
-            <input type="text" id="hastaPicker" class="form-control" />
-        </th>
-    </tr>
-</table>
-<div id="map"></div>
-<br />
+
+<div style="display:none;" id="myDiv" class="">
+    @*<button onclick="ProcesarPuntos()">Procesar puntos</button>*@
+    <table class="table">
+        <tr>
+            <th>
+                <strong>Desde:</strong><br />
+                <input type="text" id="desdePicker" class="form-control" />
+            </th>
+            <th>
+                <strong>Hasta:</strong><br />
+                <input type="text" id="hastaPicker" class="form-control" />
+            </th>
+        </tr>
+    </table>
+    <div id="loader">
+        <h2>Procesando datos...</h2>
+    </div>
+    <div id="myDynamicTable"></div>
+    <div id="map"></div>
+    <br />
+    <div id="container" style="width: 100%; min-height: 500px"></div>
+    <br />
+</div>
+
+<script>
+
+
+    function CambiarCentroMapa(lat, lng)
+    {
+        var punto = new google.maps.LatLng(lat, lng);
+        map.setCenter(punto);
+    }
+
+    function InicializarCelda(fila, valor, titulo)
+    {
+        var td = fila.insertCell();
+
+        var contenido = "";
+
+        if (titulo == true)
+        {
+            contenido = '<center><b>'+valor+'</b></center>';
+        }
+        else
+        {
+            contenido = '<center>' + valor + '</center>';
+        }
+
+        td.insertAdjacentHTML('beforeend', contenido);
+        td.style.border = '1px solid black';
+    }
+
+
+    function tableCreate(filas, array)
+    {
+        var myTableDiv = document.getElementById("myDynamicTable");
+        myTableDiv.innerHTML = "";
+
+        var tbl = document.createElement('table');
+        tbl.style.width = '100px';
+        tbl.style.border = '1px solid black';
+
+        var tr = tbl.insertRow();
+
+
+        InicializarCelda(tr, "N°", true);
+        InicializarCelda(tr, "Punto Inicio", true);
+        InicializarCelda(tr, "Hora Inicio", true);
+        InicializarCelda(tr, "Calle Inicio", true);
+        InicializarCelda(tr, "Localidad Inicio", true);
+
+        InicializarCelda(tr, "Punto Final", true);
+        InicializarCelda(tr, "Hora Final", true);
+        InicializarCelda(tr, "Calle Final", true);
+        InicializarCelda(tr, "Localidad Final", true);
+
+        for (var i = 0; i < filas; i++) {
+
+            if (array[i].Puntos != null) {
+                var arrayPuntosLenght = Object.keys(array[i].Puntos).length;
+
+                if (arrayPuntosLenght <= 1)
+                {
+                    continue;
+                }
+
+                var calleInicio = array[i].NombreCalleInicio;
+                var localInicio = array[i].NombreCiudadInicio;
+                var latInicio = array[i].Puntos[0].Latitud;
+                var lngInicio = array[i].Puntos[0].Longitud;
+                var numero = i + 1;
+
+                var stringHoraInicio = array[i].Puntos[0].FechaHora.replace(/\D/g, '');
+                var dateInicio = new Date(parseInt(stringHoraInicio));
+
+                var hi = dateInicio.getHours();
+                hi = ("0" + hi).slice(-2);
+
+                var mi = dateInicio.getMinutes();
+                mi = ("0" + mi).slice(-2);
+
+                var si = dateInicio.getSeconds();
+                si = ("0" + si).slice(-2);
+
+                var horaInicio = hi + ":" + mi + ":" + si;
+
+
+                var calleFinal = array[i].NombreCalleFinal;
+                var localFinal = array[i].NombreCiudadFinal;
+                var latFinal = array[i].Puntos[arrayPuntosLenght - 1].Latitud;
+                var lngFinal = array[i].Puntos[arrayPuntosLenght - 1].Longitud;
+
+                var stringHoraFinal = array[i].Puntos[arrayPuntosLenght - 1].FechaHora.replace(/\D/g, '');
+                var dateFinal = new Date(parseInt(stringHoraFinal));
+
+                var hf = dateFinal.getHours();
+                hf = ("0" + hf).slice(-2);
+
+                var mf = dateFinal.getMinutes();
+                mf = ("0" + mf).slice(-2);
+
+                var sf = dateFinal.getSeconds();
+                sf = ("0" + sf).slice(-2);
+
+                var horaFinal = hf + ":" + mf + ":" + sf;
+
+                var tr = tbl.insertRow();
+
+                InicializarCelda(tr, numero+"", false);
+                InicializarCelda(tr, '<input type="image" onclick="CambiarCentroMapa(' + latInicio + ', ' + lngInicio +')" src="http://maps.google.com/mapfiles/ms/icons/green-dot.png" />', false);
+                InicializarCelda(tr, horaInicio, false);
+                InicializarCelda(tr, calleInicio, false);
+                InicializarCelda(tr, localInicio, false);
+
+                InicializarCelda(tr, '<input type="image" onclick="CambiarCentroMapa(' + latFinal+', '+lngFinal+')" src="http://maps.google.com/mapfiles/ms/icons/red-dot.png" />', false);
+                InicializarCelda(tr, horaFinal, false);
+                InicializarCelda(tr, calleFinal, false);
+                InicializarCelda(tr, localFinal, false);
+
+            }
+        }
+
+        myTableDiv.appendChild(tbl);
+    }
+
+
+
+</script>
+
 
 
 <script>
 
-    var $rutaMapa;
+
+    var map;
+    var $rutasEnMapa = [];
+    var $marcadoresMapa = [];
+    var $infoWindow;
 
 
     var $desde = $("#desdePicker").timepicker({
 
-            timeFormat: "hh:mm:ss TT",
+            timeFormat: "HH:mm:ss",
             hourGrid: 6,
             minuteGrid: 10,
             hourMin: 0,
@@ -71,7 +215,7 @@
 
     var $hasta = $("#hastaPicker").timepicker({
 
-        timeFormat: "hh:mm:ss TT",
+        timeFormat: "HH:mm:ss",
         hourGrid: 6,
         minuteGrid: 10,
         hourMin: 0,
@@ -103,17 +247,21 @@
         maxDate: new Date(),
         showOn: "both",
         buttonText: "Selección fecha"
-    });
+        });
 
+    document.getElementById("loader").style.display = "none";
+    document.getElementById("myDiv").style.display = "block";
 
     function HoraCambiada() {
 
+        GraficoVelocidad()
         var fechaDesde = $desde.datepicker('getDate');
         var fechaHasta = $hasta.datepicker('getDate');
+        document.getElementById("loader").style.display = "block";
 
         $.ajax({
             type: "GET",
-            url: "/UserNormal/getPosicionesFiltradas",   
+            url: "/UserNormal/getPosicionesFiltradasYMas",
             data:
             {
                 horaDesde: (@Model.FechaMostrar.Day + "/" + @Model.FechaMostrar.Month + "/" + @Model.FechaMostrar.Year + " " + fechaDesde.getHours() + ":" + fechaDesde.getMinutes() + ":" + fechaDesde.getSeconds()),
@@ -124,34 +272,211 @@
             contentType: "application/json;charset=utf-8",
             dataType: "json",
             success: function (result) {
+                document.getElementById("loader").style.display = "none";
                 var array = JSON.parse(result.respuesta);
-                //alert(array[0].Latitud);
                 var arrayLenght = Object.keys(array).length;
-                var puntosRuta = [];
+
+                //Eliminar rutas anteriores
+                var rutasEnMapaLenght = Object.keys($rutasEnMapa).length;
+                for (var i = 0; i < rutasEnMapaLenght; i++) {
+                    var ruta = $rutasEnMapa[i];
+                    ruta.setMap(null);
+                }
+                // eliminar marcadores anteriores
+                var marcadoresEnMapaLenght = Object.keys($marcadoresMapa).length;
+                for (var i = 0; i < marcadoresEnMapaLenght; i++) {
+                    var marcador = $marcadoresMapa[i];
+                    marcador.setMap(null);
+                }
+
+                //Leer rutas nuevas y crearlas
+                //Crear ademas marcadores de inicio y fin
+                var rutas = [];
 
                 for (var i = 0; i < arrayLenght; i++)
                 {
-                    var punto = new google.maps.LatLng(array[i].Latitud, array[i].Longitud);
-                    puntosRuta.push(punto);
+                    var velPromedio = array[i].VelocidadPromedio;
+                    var kilRecorrido = array[i].KilometrosRecorridos;
+                    var calleInicio = array[i].NombreCalleInicio;
+                    var calleFinal = array[i].NombreCalleFinal;
+                    var puntosRuta = [];
+
+                    if (array[i].Puntos != null) {
+
+                        var arrayPuntosLenght = Object.keys(array[i].Puntos).length;
+
+                        if (arrayPuntosLenght <= 1)
+                        {
+                            continue;
+                        }
+
+                        for (var z = 0; z < arrayPuntosLenght; z++) {
+                            var punto = new google.maps.LatLng(array[i].Puntos[z].Latitud, array[i].Puntos[z].Longitud);
+                            puntosRuta.push(punto);
+
+                            //Ultimo punto de la ultima ruta se usar para centrar la camara
+                            if (i == arrayLenght - 1 && z == arrayPuntosLenght - 1)
+                            {
+                                map.setCenter(punto);
+                            }
+
+
+                            var stringHora = array[i].Puntos[z].FechaHora.replace(/\D/g, '');
+                            var horaPunto = new Date(parseInt(stringHora));
+
+                            var gpsOff = array[i].Puntos[z].GPSOffBool;
+                            if (gpsOff == true) {
+                                MarcadorGPSOff(array[i].Puntos[z].Latitud, array[i].Puntos[z].Longitud, horaPunto, "GPS se encendió");
+
+                                if (z > 0) {
+                                    var stringHoraAnterior = array[i].Puntos[z-1].FechaHora.replace(/\D/g, '');
+                                    var horaPuntoAnterior = new Date(parseInt(stringHoraAnterior));
+                                    MarcadorGPSOff(array[i].Puntos[z - 1].Latitud, array[i].Puntos[z - 1].Longitud, horaPuntoAnterior, "GPS se apagó");
+                                }
+                            }
+
+                            if (z == 0) {
+                                AgregarMarcador(array[i].Puntos[z].Latitud, array[i].Puntos[z].Longitud, calleInicio, velPromedio, kilRecorrido, true, horaPunto, i+1)
+                            }
+                            if (z == arrayPuntosLenght - 1) {
+                                AgregarMarcador(array[i].Puntos[z].Latitud, array[i].Puntos[z].Longitud, calleFinal, velPromedio, kilRecorrido, false, horaPunto, i+1)
+                            }
+                        }
+
+                        var rutaNueva = new google.maps.Polyline({
+                            path: [],
+                            geodesic: true,
+                            strokeColor: rainbow( arrayLenght , i),
+                            strokeOpacity: 1.0,
+                            strokeWeight: 5
+                        });
+                        rutaNueva.setPath(puntosRuta);
+                        rutaNueva.setMap(map);
+                        $rutasEnMapa.push(rutaNueva);
+                    }
                 }
 
-                //alert(puntosRuta);
 
-                //alert(puntosRuta.values());
-                $rutaMapa.setMap(null);
-                $rutaMapa.setPath(puntosRuta);
-                $rutaMapa.setMap(map);
 
+                tableCreate(arrayLenght, array);
+                
             },
             error: function (response) {
                 //debugger;
-                alert('eror');
+                document.getElementById("loader").style.display = "none";
+                //alert('eror');
             }
         });
     }
 
+    function AgregarMarcador(latitud, longitud, calle, velocidad, kilometros, inicio, hora, numero) {
 
-    var map;
+        var urlIcon;
+
+        if (inicio == true)
+        {
+            urlIcon = 'https://maps.gstatic.com/mapfiles/ms2/micons/green.png';
+        }
+        else
+        {
+            urlIcon = 'https://maps.gstatic.com/mapfiles/ms2/micons/red.png';
+        }
+
+        var markerIcon = {
+            url: urlIcon,
+            //scaledSize: new google.maps.Size(80, 80)
+            //origin: new google.maps.Point(0, 0),
+            //anchor: new google.maps.Point(32, 65),
+            labelOrigin: new google.maps.Point(16, 12)
+        };
+
+        
+        var texto = numero + "";
+        var mlabel = {
+                text: texto,
+                //color: "#eb3a44",
+                fontSize: "16px",
+                fontWeight: "bold"
+        }; 
+
+        var marker = new google.maps.Marker(
+            {
+                position: { lat: latitud, lng: longitud },
+                map: map,
+                title: "Click para información",
+                draggable: false,
+                icon: markerIcon,
+                label: mlabel
+            });
+
+
+        var contenidoInicio = "<strong>Inicio</strong></br>"
+            + "<strong>Hora: </strong>" + hora.getHours() + ":" + hora.getMinutes() + ":" + hora.getSeconds() + "</br>"
+            + "<strong>Calle: </strong>" + calle
+
+        var contenidoFinal = "<strong>Final</strong></br>"
+            + "<strong>Calle: </strong>" + calle + "</br>"
+            + "<strong>Hora: </strong>" + hora.getHours() + ":" + hora.getMinutes() + ":" + hora.getSeconds()+ "</br>"
+            + "<strong>Velocidad promedio: </strong>" + velocidad + " Km/h</br>"
+            + "<strong>Kilometros recorridos: </strong>" + kilometros + " Kms"
+
+        marker.addListener('click', function () {
+
+            if (inicio == true)
+            {
+                $infoWindow.setContent(contenidoInicio);
+            }
+            else {
+                $infoWindow.setContent(contenidoFinal);
+            }
+
+            $infoWindow.open(map, this);
+        });
+        $marcadoresMapa.push(marker);
+    }
+
+    function MarcadorGPSOff(latitud, longitud, hora, mensaje) {
+
+        var urlIcon = 'https://maps.gstatic.com/mapfiles/ms2/micons/blue.png';
+
+        var markerIcon = {
+            url: urlIcon,
+            //scaledSize: new google.maps.Size(80, 80)
+            //origin: new google.maps.Point(0, 0),
+            //anchor: new google.maps.Point(32, 65),
+            labelOrigin: new google.maps.Point(16, 12)
+        };
+
+
+        var texto = "!";
+        var mlabel = {
+            text: texto,
+            //color: "#eb3a44",
+            fontSize: "16px",
+            fontWeight: "bold"
+        };
+
+        var marker = new google.maps.Marker(
+            {
+                position: { lat: latitud, lng: longitud },
+                map: map,
+                title: "Click para información",
+                draggable: false,
+                icon: markerIcon,
+                label: mlabel
+            });
+
+
+        var contenido = "<strong>" + mensaje +"</strong></br>"
+            + "<strong>Hora: </strong>" + hora.getHours() + ":" + hora.getMinutes() + ":" + hora.getSeconds() + "</br>";
+
+        marker.addListener('click', function () {
+
+            $infoWindow.setContent(contenido);
+            $infoWindow.open(map, this);
+        });
+        $marcadoresMapa.push(marker);
+    }
 
     function initMap() {
 
@@ -162,33 +487,9 @@
             zoom: 14
         });
 
-        var coordenadasRuta = [
-        @{
-            List<AEOnline.Models.HistorialPosicion> historiales = Model.historialesPosicion.OrderBy(h => h.FechaHora).ToList();
-            for (int i = 0; i < historiales.Count; i++)
-            {
-                <text>
-            { lat: @historiales[i].Latitud.ToString().Replace(',','.') , lng: @historiales[i].Longitud.ToString().Replace(',', '.') }
-                </text>
-                if(i < historiales.Count - 1)
-                {
-                    <text>
-            ,
-                    </text>
-                }
-            }
-        }
-        ];
-
-        $rutaMapa = new google.maps.Polyline({
-            path: coordenadasRuta,
-            geodesic: true,
-            strokeColor: '#FF0000',
-            strokeOpacity: 1.0,
-            strokeWeight: 2
+        $infoWindow = new google.maps.InfoWindow({
+            content: ""
         });
-
-        $rutaMapa.setMap(map);
 
     }
 
@@ -197,3 +498,162 @@
 </script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDu0DHkQkZ-iHDrZr-ztGThEbUyUvgGPfM&callback=initMap"
         async defer></script>
+
+
+<script>
+    var dom = document.getElementById("container");
+    var myChart = echarts.init(dom);
+    var option = null;
+
+    var data = [];
+
+    GraficoVelocidad()
+    function GraficoVelocidad()
+    {
+        option = {
+            title: {
+                text: 'Velocidad durante este rango de tiempo',
+                subtext: ''
+            },
+            tooltip: {
+                trigger: 'axis',
+
+                formatter: function (params) {
+                    //POR AXIS: params[0].value[1]
+                    //POR ITEM: params.value[1]
+
+                    var date = new Date(params[0].value[0]);
+                    var velocidad = params[0].value[1];
+
+                    data = date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds();
+                    return data + '<br/>'
+                        + velocidad + " Km/Hr";
+                }
+            },
+            toolbox: {
+                //show: true,
+                //feature: {
+                //    mark: { show: true },
+                //    dataView: { show: true, readOnly: false },
+                //    restore: { show: true },
+                //    saveAsImage: { show: true }
+                //}
+            },
+            dataZoom: {
+                show: true,
+                start: 0
+            },
+            legend: {
+                data: ['Velocidad']
+            },
+            grid: {
+                y2: 80
+            },
+            xAxis: [
+                {
+                    name: 'Hora registro',
+                    type: 'time',
+                    splitNumber: 10
+                }
+            ],
+            yAxis: [
+                {
+                    name: 'Velocidad en (Km/h)',
+                    type: 'value'
+                }
+            ],
+            series: [
+                {
+                    name: 'Velocidad',
+                    type: 'line',
+                    itemStyle: { normal: { areaStyle: { type: 'default' } } },
+                    showAllSymbol: true,
+                    symbolSize: 10,
+                    data: ObtenerDatosVelocidad()
+                }
+            ]
+        };
+
+        if (option && typeof option === "object") {
+            myChart.setOption(option, true);
+        }
+    }
+
+
+    function ObtenerDatosVelocidad() {
+        var fechaDesde = $desde.datepicker('getDate');
+        var fechaHasta = $hasta.datepicker('getDate');
+
+        var d = [];
+
+        @{
+            for (int i = 0; i < Model.historialesVelocidad.Count; i++)
+            {
+                int dia = Model.FechaMostrar.Day;
+                int mes = Model.FechaMostrar.Month;
+                int year = Model.FechaMostrar.Year;
+
+                int hora = Model.historialesVelocidad[i].FechaHora.Hour;
+                int minuto = Model.historialesVelocidad[i].FechaHora.Minute;
+                int segundo = Model.historialesVelocidad[i].FechaHora.Second;
+
+            <text>
+                var fdesde = new Date(@year,@mes,@dia, fechaDesde.getHours(), fechaDesde.getMinutes(), fechaDesde.getSeconds());
+                var fhasta = new Date(@year,@mes,@dia, fechaHasta.getHours(), fechaHasta.getMinutes(), fechaHasta.getSeconds());
+                var fecha = new Date(@year,@mes,@dia,@hora,@minuto,@segundo);
+
+                if (fecha >= fdesde && fecha <= fhasta)
+                {
+
+                    d.push([
+                    new Date(@Model.historialesVelocidad[i].FechaHora.Year, @Model.historialesVelocidad[i].FechaHora.Month, @Model.historialesVelocidad[i].FechaHora.Day, @Model.historialesVelocidad[i].FechaHora.Hour, @Model.historialesVelocidad[i].FechaHora.Minute, @Model.historialesVelocidad[i].FechaHora.Second )
+                    ,
+                    @Model.historialesVelocidad[i].Valor.ToString().Replace(',', '.')
+                    ]);
+                }
+
+
+            </text>
+            }
+        }
+
+        return d;
+    }
+
+    HoraCambiada();
+
+    $(window).on('resize', function () {
+        if (myChart != null && myChart != undefined) {
+            myChart.resize();
+        }
+    });
+
+
+    function rainbow(numOfSteps, step) {
+        // This function generates vibrant, "evenly spaced" colours (i.e. no clustering). This is ideal for creating easily distinguishable vibrant markers in Google Maps and other apps.
+        // Adam Cole, 2011-Sept-14
+        // HSV to RBG adapted from: http://mjijackson.com/2008/02/rgb-to-hsl-and-rgb-to-hsv-color-model-conversion-algorithms-in-javascript
+        var r, g, b;
+        var h = step / numOfSteps;
+        var i = ~~(h * 6);
+        var f = h * 6 - i;
+        var q = 1 - f;
+        switch (i % 6) {
+            case 0: r = 1; g = f; b = 0; break;
+            case 1: r = q; g = 1; b = 0; break;
+            case 2: r = 0; g = 1; b = f; break;
+            case 3: r = 0; g = q; b = 1; break;
+            case 4: r = f; g = 0; b = 1; break;
+            case 5: r = 1; g = 0; b = q; break;
+        }
+        var c = "#" + ("00" + (~ ~(r * 255)).toString(16)).slice(-2) + ("00" + (~ ~(g * 255)).toString(16)).slice(-2) + ("00" + (~ ~(b * 255)).toString(16)).slice(-2);
+        return (c);
+    }
+
+
+
+    
+</script>
+
+
+       

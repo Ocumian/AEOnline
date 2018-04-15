@@ -30,5 +30,19 @@ namespace AEOnline.Models
             _db.SaveChanges();
 
         }
+
+        public static void EliminarTipo(ProyectoAutoContext _db, Flota _flota, TipoVehiculo _tipo)
+        {
+            List<Auto> autos = _flota.Autos.ToList();
+
+            foreach(Auto a in autos)
+            {
+                if (a.TipoVehiculo == _tipo)
+                    a.TipoVehiculo = null;
+            }
+
+            _db.TiposVehiculo.Remove(_tipo);
+            _db.SaveChanges();
+        }
     }
 }

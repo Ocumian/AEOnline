@@ -44,6 +44,7 @@ namespace AEOnline.Controllers.web
             Usuario userEncontrado = db.Usuarios.Where(u => u.Email == emailID).FirstOrDefault();
             if(userEncontrado != null)
             {
+                //validado = true;
                 validado = PasswordHash.ValidatePassword(passID, userEncontrado.Password);
             }
 
@@ -65,7 +66,14 @@ namespace AEOnline.Controllers.web
                 }
                 else if(userEncontrado.Rol == Usuario.RolUsuario.AdminDeFlota)
                 {
-                    if (userEncontrado.UsuarioFlotaId != null)
+                    if(userEncontrado.UsuarioFlotaId == null)
+                    {
+
+                        Flota f = Flota.CrearFlota(db, userEncontrado.Nombre + "Flota"+userEncontrado.Id, userEncontrado.Id, "Default");
+
+                        Session["Flota"] = f.Id;
+                    }
+                    else if (userEncontrado.UsuarioFlotaId != null)
                         Session["Flota"] = userEncontrado.UsuarioFlota.Flota.Id;
 
                     return RedirectToAction("Index", "AdminFlota2");
@@ -139,10 +147,15 @@ namespace AEOnline.Controllers.web
                 return View("RegistroUsuario", model);
             }
 
-            Usuario.CrearUsuario(db, model.Nombre, model.Email, model.Password, Usuario.RolUsuario.Normal, 0);
+            Usuario.CrearUsuario(db, model.Nombre, model.Email, model.Password, Usuario.RolUsuario.AdminDeFlota, 0);
 
 
             return RedirectToAction("Index");
+        }
+
+        public ActionResult AcercaDe()
+        {
+            return View();
         }
     }
 }

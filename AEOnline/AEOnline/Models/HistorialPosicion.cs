@@ -23,5 +23,12 @@ namespace AEOnline.Models
         public bool Inicio { get; set; }
 
         public bool Procesado { get; set; }
+
+        public float MetrosTramo { get; set; }
+
+        public string NombreCalle { get; set; }
+        public string NombreLocalidad { get; set; }
+
+        public bool GPSOffBool { get; set; }
     }
 }

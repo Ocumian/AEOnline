@@ -11,13 +11,26 @@
         rol += Session["Rol"].ToString();
     }
 
-    if (rol != "AdminDeFlota")
+    if (rol != "AdminDeFlota" )
     {
         Response.Redirect("~/Login/Index");
     }
+
+    string posSelected = "";
+    string velSelected = "";
+
+    if (ViewBag.HistorialSeleccionado +"" == "Posicion")
+    {
+        posSelected = "selected";
+    }
+    else if(ViewBag.HistorialSeleccionado + "" == "Velocidad")
+    {
+        velSelected = "selected";
+    }
+
 }
 
-<h2>Registros del auto: @Model.AutoPatente</h2>
+<h2>Registros del vehículo: "@Model.AutoNombre", Patente: @Model.AutoPatente</h2>
 <br />
 @*<div>
         @Html.ActionLink("Volver a miembros de flota", "AdministrarUsuarios")
@@ -32,8 +45,15 @@
         @Html.HiddenFor(model => model.AutoId)
         <table class="table">
             <tr>
+                @*<th>
+                    @Html.DropDownList("MyType", null, "Seleccione tipo de historial", new { @class = "form-control" })
+
+                </th>*@
                 <th>
-                    @Html.DropDownList("MyType", EnumHelper.GetSelectList((Type)ViewBag.TiposHistorial), "Seleccione tipo de historial", new { @class = "form-control" })
+                    <select id="MyType" name="MyType" class = "form-control">
+                        <option value="Posicion"  @posSelected>Posicion</option>
+                        <option value="Velocidad" @velSelected>Velocidad</option>
+                    </select>
                 </th>
                 <th>
                     @*@Html.EditorFor(model => model.Fecha, new { htmlAttributes = new { @Value = Model.Fecha.ToString("dd/MM/yyyy"), @class = "datepicker" } })*@
@@ -83,7 +103,7 @@
         {
             <text>
                 <div>
-                    @Html.Partial("~/Views/UserNormal/_EstadisticaPosicionV2.cshtml", (AEOnline.Models.WebModels.HistorialWeb)ViewBag.HistorialWeb)
+                    @Html.Partial("~/Views/UserNormal/_EstadisticaPosicion.cshtml", (AEOnline.Models.WebModels.HistorialWeb)ViewBag.HistorialWeb)
                 </div>
             </text>
         }

@@ -12,8 +12,11 @@ namespace AEOnline.ClasesAdicionales
         public string FechaHora { get; set; }
         public double Latitud { get; set; }
         public double Longitud { get; set; }
+        public float MetrosTramo { get; set; }
+        public bool Inicio { get; set; }
+        public bool GPSOffBool { get; set; }
 
-        public static string ObtenerCalle(double _lat, double _lng)
+        public static List<Placemark> ObtenerDatosPosición(double _lat, double _lng)
         {
             int numeroIntentos = 20;
 
@@ -29,15 +32,13 @@ namespace AEOnline.ClasesAdicionales
 
             if (st == GeoCoderStatusCode.G_GEO_SUCCESS && plc != null)
             {
-                //foreach (var pl in plc)
-                //{
-                //    if (pl.LocalityName == "Osorno")
-                //}
+                //string calle = plc[0].ThoroughfareName;
+                //string localidad = plc[0].LocalityName;
 
-                return plc[0].ThoroughfareName;
+                return plc;
             }
 
-            return "";
+            return null;
         }
 
         public static GDirections ObtenerDireccion(double _latInicio, double _lngInicio, double _latFinal, double _lngFinal)

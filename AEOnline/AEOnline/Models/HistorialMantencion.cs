@@ -24,7 +24,9 @@ namespace AEOnline.Models
         public virtual Proveedor Proveedor { get; set; }
         public virtual List<MantencionServicio> ServiciosAplicados { get; set; }
         public int Costo { get; set; }
+        public virtual Operador Operador { get; set; }
 
+        public DateTime FechaCreacion { get; set; }
 
 
         public static void NuevoRegistroDeServicio(ProyectoAutoContext _db, int _idAuto ,DateTime _fecha, 
@@ -39,6 +41,10 @@ namespace AEOnline.Models
                 _proveedor.GastoTotalMantenimiento += _costo;
             }
 
+            Operador operador = null;
+            if (auto.OperadorId != null)
+                operador = auto.Operador;
+
             HistorialMantencion nuevaMantencion = new HistorialMantencion();
             nuevaMantencion.Fecha = _fecha;
             nuevaMantencion.Kilometraje = _kilometraje;
@@ -46,6 +52,7 @@ namespace AEOnline.Models
             nuevaMantencion.Costo = _costo;
             nuevaMantencion.Proveedor = _proveedor;
             nuevaMantencion.ServiciosAplicados = new List<MantencionServicio>();
+            nuevaMantencion.Operador = operador;
 
             for (int i = 0; i < _servicios.Count; i++)
             {

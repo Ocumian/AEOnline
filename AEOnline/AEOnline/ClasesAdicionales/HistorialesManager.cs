@@ -3,6 +3,7 @@ using AEOnline.Models.WebModels;
 using GMap.NET;
 using System;
 using System.Collections.Generic;
+using System.Device.Location;
 using System.Linq;
 using System.Web;
 
@@ -296,10 +297,23 @@ namespace AEOnline.ClasesAdicionales
             if (auto == null)
                 return new HistorialWeb();
 
-            HistorialDiario historialHoy = auto.HistorialesDiarios
-                    .Where(h => h.Fecha.Year == _fecha.Year
-                    && h.Fecha.Month == _fecha.Month
-                    && h.Fecha.Day == _fecha.Day).FirstOrDefault();
+            HistorialDiario historialHoy = null;
+
+            List<HistorialDiario> historialesHoy = auto.HistorialesDiarios
+                .Where(h => h.Fecha.Year == _fecha.Year
+                && h.Fecha.Month == _fecha.Month
+                && h.Fecha.Day == _fecha.Day).ToList();
+
+            int nResultados = 0;
+
+            foreach (HistorialDiario hd in historialesHoy)
+            {
+                if (hd.historialesVelocidad.Count > nResultados)
+                {
+                    historialHoy = hd;
+                    nResultados = hd.historialesVelocidad.Count;
+                }
+            }
 
             if (historialHoy == null)
             {
@@ -309,7 +323,6 @@ namespace AEOnline.ClasesAdicionales
 
 
             List<HistorialVelocidad> histVelocidad = historialHoy.historialesVelocidad.OrderBy(h => h.HoraRegistro).ToList();
-
 
             #region HistorialesComparables
 
@@ -389,10 +402,24 @@ namespace AEOnline.ClasesAdicionales
             if (auto == null)
                 return new HistorialWeb();
 
-            HistorialDiario historialHoy = auto.HistorialesDiarios
+            HistorialDiario historialHoy = null;
+
+            List<HistorialDiario> historialesHoy = auto.HistorialesDiarios
                 .Where(h => h.Fecha.Year == _fecha.Year
                 && h.Fecha.Month == _fecha.Month
-                && h.Fecha.Day == _fecha.Day).FirstOrDefault();
+                && h.Fecha.Day == _fecha.Day).ToList();
+
+            int nResultados = 0;
+
+            foreach(HistorialDiario hd in historialesHoy)
+            {
+                List<HistorialPosicion> histPos = hd.historialesPosicion;
+                if(histPos.Count > nResultados)
+                {
+                    historialHoy = hd;
+                    nResultados = histPos.Count;
+                }
+            }
 
             DateTime fechaEjemplo = new DateTime(2018, 1, 1);
             if(_fecha.Date == fechaEjemplo.Date)
@@ -407,168 +434,24 @@ namespace AEOnline.ClasesAdicionales
                 return _HW;
             }
 
+            
             List<HistorialPosicion> historiales = historialHoy.historialesPosicion.OrderBy(h => h.FechaHora).ToList();
             _HW.historialesPosicion = historiales;
 
+            #region HistorialesComparables
+
+            List<HistorialWeb.TiposHistorial> historialesComparables = new List<HistorialWeb.TiposHistorial>();
+            historialesComparables.Add(HistorialWeb.TiposHistorial.Velocidad);
+            _HW.historialesComparables = historialesComparables;
+
+            List<HistorialVelocidad> histVelocidad = historialHoy.historialesVelocidad.OrderBy(h => h.HoraRegistro).ToList();
+            List<PuntoGrafico> puntosVelocidad = VelocidadAPuntosGrafico(histVelocidad);
+            _HW.historialesVelocidad = puntosVelocidad;
+
+            #endregion
+
             return _HW;
 
-        }
-
-        public static List<HistorialPosicion> ProcesarHistorialPosicion(ProyectoAutoContext _db, HistorialDiario _histDiario, List<HistorialPosicion> _listaAprocesar)
-        {
-            //se recorren los historiales
-            //se verifica si hay algun punto no procesado
-            //si un punto no está procesado, significa que el siguiente tampoco lo está y hay que hacer una ruta entre ambos
-            //al procesarse, se deja el ultimo punto de la ruta no procesado
-
-            List<HistorialPosicion> puntosValidos = new List<HistorialPosicion>();
-
-            HistorialPosicion inicio;
-            HistorialPosicion final;
-            HistorialPosicion postFinal = null;
-
-            int indexExtraInicio = 0;
-
-            //Se guardan los puntos validos (2 puntos seguidos en misma calle, etc)
-            //Esos seran los puntos en que se crearan rutas entre uno y otros
-            for (int i = 0; i < _listaAprocesar.Count; i++)
-            {
-                //Si el punto actual no es el final se procesa
-
-                if(_listaAprocesar[i].Procesado)
-                {
-                    puntosValidos.Add(_listaAprocesar[i]);
-                }
-                else if((i + indexExtraInicio + 1) < _listaAprocesar.Count)
-                {
-                    int indexInicio = i + indexExtraInicio;
-
-                    inicio = _listaAprocesar[indexInicio];
-                    final = _listaAprocesar[indexInicio + 1];
-
-                    bool inicioFinalValido = false;
-                    //si punto final y postfinal son la misma calle es un punto valido
-                    int cFinal = 1;
-                    while (inicioFinalValido == false)
-                    {
-                        postFinal = null;
-                        if (indexInicio + cFinal + 1 < _listaAprocesar.Count)
-                        {
-                            final = _listaAprocesar[indexInicio + cFinal];
-                            postFinal = _listaAprocesar[indexInicio + cFinal + 1];
-
-                            if (postFinal.Procesado == true)
-                            {
-                                postFinal = null;
-                                indexExtraInicio += cFinal - 1;
-                                inicioFinalValido = true;
-                            }
-                            else
-                            {
-                                string calle1 = Posicion.ObtenerCalle(final.Latitud, final.Longitud);
-                                string calle2 = Posicion.ObtenerCalle(postFinal.Latitud, postFinal.Longitud);
-
-                                if (calle1 == calle2 || calle1 == "" || calle2 == "")
-                                {
-                                    //Si es valido, queda "final" como punto de llegada y salel del while
-                                    indexExtraInicio += cFinal;
-                                    inicioFinalValido = true;
-                                }
-                                cFinal += 1;
-                            } 
-                        }
-                        else
-                        {
-                            //No hay un punto postfinal porque se llega al final de la lista y se designa este
-                            final = _listaAprocesar[indexInicio + cFinal];
-                            inicioFinalValido = true;
-                        }
-                    }
-
-                    //Hay riesgo que si una comparacion de calle da vacio, se tendran que incluir esos puntos
-                    if(i == 0)
-                        puntosValidos.Add(inicio);
-                    puntosValidos.Add(final);
-                    if(postFinal != null)
-                        puntosValidos.Add(postFinal);
-
-                }
-            }
-
-
-            //Se crean las rutas entre uno y otros (siempre deberia haber para crearlos de par en par)
-            //se debe asignar las horas a los puntos intermedios creados
-            //luego de terminar se deben eliminar _listaAprocesar de la base de datos
-            //se agrega la nueva lista a la base de datos
-
-            //puntosValidos = _listaAprocesar; // TESTEANDO
-
-            List<HistorialPosicion> puntosProcesados = new List<HistorialPosicion>();
-            HistorialPosicion inicioRuta;
-            HistorialPosicion finalRuta;
-            for (int i = 0; i < puntosValidos.Count; i++)
-            {
-                inicioRuta = puntosValidos[i];
-
-                if (inicioRuta.Procesado == true || i+1 >= puntosValidos.Count)
-                {
-                    puntosProcesados.Add(inicioRuta);
-                    continue;
-                }
-
-                //deberia siempre el final ser tambien no procesado porque se agregan en pares
-                finalRuta = puntosValidos[i + 1];
-
-                GDirections direccion = Posicion.ObtenerDireccion(inicioRuta.Latitud, inicioRuta.Longitud, finalRuta.Latitud, finalRuta.Longitud);
-
-                if(direccion != null)
-                {
-                    //Se crea la ruta
-                    //Se asigna una hora correspondiente a cada punto de la ruta
-                    //Se agrega a la lista con todos los puntos con el campo procesado en true
-
-                    List<PointLatLng> ruta = direccion.Route;
-                    DateTime horaInicio = inicioRuta.FechaHora;
-                    DateTime horaFinal = finalRuta.FechaHora;
-
-                    double diferencia = (horaFinal - horaInicio).TotalSeconds;
-                    int secIntervalo = Convert.ToInt32(diferencia / ruta.Count);
-
-                    TimeSpan tiempoSumar = new TimeSpan(0, 0, secIntervalo);
-                    TimeSpan c = new TimeSpan(0,0,0);
-
-                    for (int z = 0; z < ruta.Count; z++)
-                    {
-                        HistorialPosicion histProc = new HistorialPosicion()
-                        {
-                            Latitud = ruta[z].Lat,
-                            Longitud = ruta[z].Lng,
-                            FechaHora = horaInicio + c,
-                            Procesado = true
-                        };
-                        puntosProcesados.Add(histProc);
-                        c += tiempoSumar;
-                    }
-
-                }
-                else
-                {
-                    //se agregan a la lista con los campos "Procesado" aún en false
-                    puntosProcesados.Add(inicioRuta);
-                    puntosProcesados.Add(finalRuta);
-                }
-            }
-
-
-            //Se eliminan los puntos anteriores y se reemplazan por lo procesados
-
-            _db.HistorialesPosicion.RemoveRange(_listaAprocesar);
-            _db.SaveChanges();
-            _histDiario.historialesPosicion.AddRange(puntosProcesados);
-            _db.SaveChanges();
-
-            return puntosProcesados;
-            //return puntosValidos;
         }
 
 
@@ -610,6 +493,8 @@ namespace AEOnline.ClasesAdicionales
 
             return historialesFlota;
         }
+
+
 
 
         #region Tranformaciones a Puntosgrafico
@@ -662,6 +547,10 @@ namespace AEOnline.ClasesAdicionales
                     FechaHora = _lista[i].HoraTresCuartos
                 };
 
+                //filtrar historiales cono solo ceros
+                if (puntoMayor.Valor == 0)
+                    continue;
+
                 puntos.Add(puntoInicio);
                 puntos.Add(puntoFinal);
                 puntos.Add(puntoMenor);
@@ -674,6 +563,59 @@ namespace AEOnline.ClasesAdicionales
 
             puntos = puntos.Distinct().ToList();
             puntos = puntos.OrderBy(p => p.FechaHora).ToList();
+
+            #region Filtro velocidades
+
+            //Hay casos en que hay 2 velocidades en la misma hora,minuto segundo y uno de ellos es 0
+            //filtrar esos 0 
+            List<PuntoGrafico> filtro = new List<PuntoGrafico>();
+
+            for (int i = 1; i < puntos.Count - 1; i++)
+            {
+                PuntoGrafico anterior = puntos[i - 1];
+                PuntoGrafico actual = puntos[i];
+                PuntoGrafico siguiente = puntos[i + 1];
+
+                if(actual.FechaHora != siguiente.FechaHora && actual.FechaHora != anterior.FechaHora)
+                {
+                    filtro.Add(actual);
+                }
+                else if(actual.FechaHora == siguiente.FechaHora || actual.FechaHora == anterior.FechaHora)
+                {
+                    if(actual.Valor != 0)
+                    {
+                        filtro.Add(actual);
+                    }
+                }
+
+            }
+            #endregion
+            puntos = filtro;
+
+            #region filtro Ceros incoherentes
+            //Filtrar puntos en que se baja a 0 incoherentemente
+            List<PuntoGrafico> filtroCerosIncoherentes = new List<PuntoGrafico>();
+            for (int i = 1; i < puntos.Count - 1; i++)
+            {
+                PuntoGrafico anterior = puntos[i - 1];
+                PuntoGrafico actual = puntos[i];
+                PuntoGrafico siguiente = puntos[i + 1];
+
+                if(actual.Valor == 0)
+                {
+                    if (anterior.Valor <= 20 && siguiente.Valor <= 20)
+                        filtroCerosIncoherentes.Add(actual);
+                }
+                else
+                {
+                    filtroCerosIncoherentes.Add(actual);
+                }
+
+            }
+            #endregion
+
+            puntos = filtroCerosIncoherentes;
+
 
             return puntos;
         }

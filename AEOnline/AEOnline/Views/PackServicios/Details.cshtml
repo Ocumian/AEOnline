@@ -1,0 +1,72 @@
+﻿@model AEOnline.Models.PackServicio
+
+@{
+    ViewBag.Title = "Details";
+
+    Layout = "~/Views/Shared/_LayoutSuperAdmin.cshtml";
+
+    string rol = "";
+
+    if (Session["Rol"] != null)
+    {
+        rol += Session["Rol"].ToString();
+    }
+
+    if (rol != "SuperAdmin")
+    {
+        Response.Redirect("~/Login/Index");
+    }
+}
+
+<h2>Detalles</h2>
+
+<div>
+    <h4>Pack de Servicio</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.Nombre)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Nombre)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.NumeroVehiculos)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.NumeroVehiculos)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.NumeroOperadores)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.NumeroOperadores)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.ModuloCombustible)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.ModuloCombustible)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.ModuloMantencion)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.ModuloMantencion)
+        </dd>
+
+    </dl>
+</div>
+<p>
+    @Html.ActionLink("Editar", "Edit", new { id = Model.Id }) |
+    @Html.ActionLink("Volver a la lista", "Index")
+</p>

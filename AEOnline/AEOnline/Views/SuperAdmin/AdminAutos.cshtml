@@ -27,7 +27,7 @@
             @Html.DisplayNameFor(model => model.Patente)
         </th>
         <th>
-            Nombre de chofer
+            Nombre de Operardor
         </th>
         <th>
             Nombre de flota
@@ -35,43 +35,52 @@
 
         <th></th>
         <th></th>
+        <th></th>
     </tr>
 
     @foreach (var item in Model)
     {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Patente)
-            </td>
-            <td>
-                @{
-                    string nChofer = "-";
+    <tr>
+        <td>
+            @Html.DisplayFor(modelItem => item.Patente)
+        </td>
+        <td>
+            @{
+            string nChofer = "-";
 
-                    if (item.Operador != null)
-                    {
-                        nChofer = item.Operador.Usuario.Nombre;
-                    }
-                }
-                @nChofer
-            </td>
-            <td>
-                @{
-                    string nFlota = "-";
+            if (item.Operador != null)
+            {
+                nChofer = item.Operador.Nombre;
+            }
+            }
+            @nChofer
+        </td>
+        <td>
+            @{
+            string nFlota = "-";
 
-                    if (item.Flota != null)
-                    {
-                        nFlota = item.Flota.Nombre;
-                    }
-                }
-                @nFlota
-            </td>
-            <td>
-                @Html.ActionLink("Editar Datos", "EditarAuto", new { id = item.Id })
-            </td>
-            <td>
-                @Html.ActionLink("Eliminar", "EliminarAuto", new { id = item.Id })
-            </td>
-        </tr>
+            if (item.Flota != null)
+            {
+                nFlota = item.Flota.Nombre;
+            }
+            }
+            @nFlota
+        </td>
+        <td>
+            @Html.ActionLink("Editar Datos", "EditarAuto", new { id = item.Id })
+        </td>
+        <td>
+            @Html.ActionLink("Eliminar", "EliminarAuto", new { id = item.Id })
+        </td>
+        <td>
+            <div class="btn-group m-lg-1">
+                <a href="@Url.Action("RegistrosCelular", "SuperAdmin", new { id = item.Id , tipo = 1})" class="btn btn-info">
+                    <i class="fa fa-fw fa-bar-chart"></i>
+                    Registros
+                </a>
+            </div>
+        </td>
+    </tr>
      }
 
 </table>

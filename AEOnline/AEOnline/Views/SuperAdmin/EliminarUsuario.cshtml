@@ -63,7 +63,11 @@
 
             if (Model.OperadorId != null)
             {
-                nFlotaOp = Model.Operador.Auto.Patente;
+                if(Model.Operador.Autos.Count > 0)
+                {
+                    nFlotaOp = Model.Operador.Autos.First().Patente;
+                }
+                
             }
         }
         @nFlotaOp

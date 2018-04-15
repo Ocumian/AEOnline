@@ -29,8 +29,8 @@ namespace AEOnline.Controllers.web
             CreacionUsuario us = new CreacionUsuario();
             us.Fecha = DateTime.Today;
 
-            ViewBag.TiposHistorial = HistorialWeb.ObtenerTiposHistorial();
-
+            SelectList tiposHistorial = new SelectList(HistorialWeb.ObtenerTiposHistorial());
+            ViewBag.MyType = tiposHistorial;
             return View(us);
         }
 
@@ -61,12 +61,19 @@ namespace AEOnline.Controllers.web
 
             if (userActual.OperadorId != null)
             {
-                us.AutoPatente = userActual.Operador.Auto.Patente;
-                us.AutoId = userActual.Operador.Auto.Id;
+                if(userActual.Operador.Autos.Count > 0)
+                {
+                    us.AutoPatente = userActual.Operador.Autos.First().Patente;
+                    us.AutoId = userActual.Operador.Autos.First().Id;
+                }
+                
+                //us.AutoPatente = userActual.Operador.Auto.Patente;
+                //us.AutoId = userActual.Operador.Auto.Id;
             }
 
 
-            ViewBag.TiposHistorial = HistorialWeb.ObtenerTiposHistorial();
+            SelectList tiposHistorial = new SelectList(HistorialWeb.ObtenerTiposHistorial());
+            ViewBag.MyType = tiposHistorial;
             ViewBag.HistorialSeleccionado = MyType;
             ViewBag.FechaSeleccionada = Fecha;
 
@@ -116,7 +123,11 @@ namespace AEOnline.Controllers.web
             if (userActual.OperadorId != null)
             {
                 ViewBag.TieneAuto = true;
-                auto = userActual.Operador.Auto;
+                //auto = userActual.Operador.Auto;
+                if(userActual.Operador.Autos.Count > 0)
+                {
+                    auto = userActual.Operador.Autos.First() ;
+                }
 
             }
             else
@@ -133,10 +144,9 @@ namespace AEOnline.Controllers.web
         }
 
 
-
         //Llamado desde javascript de la vista _EstadisticaPosicion
         [HttpGet]
-        public ActionResult getPosicionesFiltradas(string horaDesde, string horaHasta, int idAuto)
+        public ActionResult getPosicionesFiltradasYMas(string horaDesde, string horaHasta, int idAuto)
         {
             Auto auto = db.Autos.Where(a => a.Id == idAuto).FirstOrDefault();
             List<HistorialDiario> historialesDiarios = auto.HistorialesDiarios.ToList();
@@ -152,155 +162,36 @@ namespace AEOnline.Controllers.web
             DateTime hasta;
             bool resultHasta = DateTime.TryParseExact(horaHasta, formato, FormatoFecha.provider, DateTimeStyles.None, out hasta);
 
-            List<HistorialPosicion> historiales = historialesDiarios.Where(h => h.Fecha.Year == desde.Year
-                                                                               && h.Fecha.Month == desde.Month
-                                                                               && h.Fecha.Day == desde.Day).FirstOrDefault().historialesPosicion.ToList();
 
-            List<HistorialPosicion> filtro = new List<HistorialPosicion>();
-            foreach(HistorialPosicion hp in historiales)
+            HistorialDiario historialHoy = null;
+
+            List<HistorialDiario> historialesHoy = auto.HistorialesDiarios
+                .Where(h => h.Fecha.Year == desde.Year
+                && h.Fecha.Month == desde.Month
+                && h.Fecha.Day == desde.Day).ToList();
+
+            int nResultados = 0;
+
+            foreach (HistorialDiario hd in historialesHoy)
             {
-                if(hp.FechaHora >= desde && hp.FechaHora <= hasta)
+                if (hd.historialesPosicion.Count > nResultados)
                 {
-                    filtro.Add(hp);
+                    historialHoy = hd;
+                    nResultados = hd.historialesPosicion.Count;
                 }
             }
 
-            filtro = filtro.OrderBy(h => h.FechaHora).ToList();
+            List<Ruta> filtro = Ruta.CrearRutasEnRango(db, historialHoy, desde, hasta);
+
+            //filtro = filtro.OrderBy(h => h.FechaHora).ToList();
 
             System.Web.Script.Serialization.JavaScriptSerializer oSerializer = new System.Web.Script.Serialization.JavaScriptSerializer();
             string sJSON = oSerializer.Serialize(filtro);
 
             return Json(new { respuesta = sJSON }, JsonRequestBehavior.AllowGet);
-        }
-
-
-        //Llamado desde javascript de la vista _EstadisticaPosicion
-        [HttpGet]
-        public ActionResult getPosicionesFiltradasV2(string horaDesde, string horaHasta, int idAuto)
-        {
-            try
-            {
-                Auto auto = db.Autos.Where(a => a.Id == idAuto).FirstOrDefault();
-                List<HistorialDiario> historialesDiarios = auto.HistorialesDiarios.ToList();
-
-                horaDesde = horaDesde.Replace('-', '/');
-                horaHasta = horaHasta.Replace('-', '/');
-
-                string formato = "d/M/yyyy H:m:s";
-
-                DateTime desde;
-                bool resultDesde = DateTime.TryParseExact(horaDesde, formato, FormatoFecha.provider, DateTimeStyles.None, out desde);
-
-                DateTime hasta;
-                bool resultHasta = DateTime.TryParseExact(horaHasta, formato, FormatoFecha.provider, DateTimeStyles.None, out hasta);
-
-
-                HistorialDiario historialHoy = historialesDiarios.Where(h => h.Fecha.Year == desde.Year
-                                                                                   && h.Fecha.Month == desde.Month
-                                                                                   && h.Fecha.Day == desde.Day).FirstOrDefault();
-
-                List<HistorialPosicion> historiales = historialHoy.historialesPosicion.OrderBy(h => h.FechaHora).ToList();
-                //TEST
-                //List<HistorialPosicion> historiales = HistorialesManager.CrearHistorialPosicionejemplo().OrderBy(h => h.FechaHora).ToList();
-
-                HistorialPosicion noProcesado = historiales.Where(h => h.Procesado == false).FirstOrDefault();
-                if (noProcesado != null)
-                {
-                    if(noProcesado.Id != historiales.Last().Id)
-                        historiales = HistorialesManager.ProcesarHistorialPosicion(db, historialHoy, historiales);
-                }
-                    
-
-                List<HistorialPosicion> filtro = new List<HistorialPosicion>();
-                foreach (HistorialPosicion hp in historiales)
-                {
-                    if (hp.FechaHora >= desde && hp.FechaHora <= hasta)
-                    {
-                        filtro.Add(hp);
-                    }
-                }
-
-                filtro = filtro.OrderBy(h => h.FechaHora).ToList();
-
-                System.Web.Script.Serialization.JavaScriptSerializer oSerializer = new System.Web.Script.Serialization.JavaScriptSerializer();
-                string sJSON = oSerializer.Serialize(filtro);
-
-                return Json(new { respuesta = sJSON }, JsonRequestBehavior.AllowGet);
-            }
-            catch
-            {
-                List<HistorialPosicion> filtro = new List<HistorialPosicion>();
-
-                System.Web.Script.Serialization.JavaScriptSerializer oSerializer = new System.Web.Script.Serialization.JavaScriptSerializer();
-                string sJSON = oSerializer.Serialize(filtro);
-
-                return Json(new { respuesta = sJSON }, JsonRequestBehavior.AllowGet);
-            }
 
         }
 
-        [HttpGet]
-        public ActionResult ProcesarPuntosDia(string horaDesde, string horaHasta, int idAuto)
-        {
-            try
-            {
-                Auto auto = db.Autos.Where(a => a.Id == idAuto).FirstOrDefault();
-                List<HistorialDiario> historialesDiarios = auto.HistorialesDiarios.ToList();
-
-                horaDesde = horaDesde.Replace('-', '/');
-                horaHasta = horaHasta.Replace('-', '/');
-
-                string formato = "d/M/yyyy H:m:s";
-
-                DateTime desde;
-                bool resultDesde = DateTime.TryParseExact(horaDesde, formato, FormatoFecha.provider, DateTimeStyles.None, out desde);
-
-                DateTime hasta;
-                bool resultHasta = DateTime.TryParseExact(horaHasta, formato, FormatoFecha.provider, DateTimeStyles.None, out hasta);
-
-
-                HistorialDiario historialHoy = historialesDiarios.Where(h => h.Fecha.Year == desde.Year
-                                                                                   && h.Fecha.Month == desde.Month
-                                                                                   && h.Fecha.Day == desde.Day).FirstOrDefault();
-
-                List<HistorialPosicion> historiales = historialHoy.historialesPosicion.OrderBy(h => h.FechaHora).ToList();
-                //TEST
-                //List<HistorialPosicion> historiales = HistorialesManager.CrearHistorialPosicionejemplo().OrderBy(h => h.FechaHora).ToList();
-
-                HistorialPosicion noProcesado = historiales.Where(h => h.Procesado == false).FirstOrDefault();
-                if (noProcesado != null)
-                {
-                    if (noProcesado.Id != historiales.Last().Id)
-                        historiales = HistorialesManager.ProcesarHistorialPosicion(db, historialHoy, historiales);
-                }
-
-
-                List<HistorialPosicion> filtro = new List<HistorialPosicion>();
-                foreach (HistorialPosicion hp in historiales)
-                {
-                    if (hp.FechaHora >= desde && hp.FechaHora <= hasta)
-                    {
-                        filtro.Add(hp);
-                    }
-                }
-
-                filtro = filtro.OrderBy(h => h.FechaHora).ToList();
-
-                System.Web.Script.Serialization.JavaScriptSerializer oSerializer = new System.Web.Script.Serialization.JavaScriptSerializer();
-                string sJSON = oSerializer.Serialize(filtro);
-
-                return Json(new { respuesta = sJSON }, JsonRequestBehavior.AllowGet);
-            }
-            catch
-            {
-                List<HistorialPosicion> filtro = new List<HistorialPosicion>();
-
-                System.Web.Script.Serialization.JavaScriptSerializer oSerializer = new System.Web.Script.Serialization.JavaScriptSerializer();
-                string sJSON = oSerializer.Serialize(filtro);
-
-                return Json(new { respuesta = sJSON }, JsonRequestBehavior.AllowGet);
-            }
-        }
 
         [HttpGet]
         public ActionResult getPosicionAuto(string patenteAuto)
